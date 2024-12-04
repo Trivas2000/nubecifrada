@@ -4,10 +4,10 @@
 
 ### 1. Configurar la Base de Datos
 - Yo use postgrest
-- Crea una base de datos llamada `nubecifrada`.
+- Crea una base de datos llamada `nubecifrada`
 
 ### 2. Crear Archivo `.env`
-Crea un archivo `.env` en el directorio raíz del proyecto con el siguiente contenido:
+Crea un archivo `.env` agregue uno de ejemplo, en donde se deberia crear
 
 ```env
 DATABASE_NAME=*Completar*
