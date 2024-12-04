@@ -49,6 +49,7 @@ python manage.py createsuperuser
 ```
 python manage.py runserver
 ```
+Se deberia poder acceder al panel de administracion de django con el superusuario
 
 ## Frontend - React
 
