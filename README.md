@@ -3,20 +3,21 @@
 ## Backend - Django
 
 ### 1. Configurar la Base de Datos
-- Asegúrate de tener PostgreSQL instalado. Si no lo tienes, descárgalo desde su [página oficial](https://www.postgresql.org/download/).
+- Yo use postgrest
 - Crea una base de datos llamada `nubecifrada`.
 
 ### 2. Crear Archivo `.env`
 Crea un archivo `.env` en el directorio raíz del proyecto con el siguiente contenido:
 
-
-DATABASE_NAME= *completar*
-DATABASE_USER= *completar*
-DATABASE_PASSWORD= *completar*
+```env
+DATABASE_NAME=nubecifrada
+DATABASE_USER=postgres
+DATABASE_PASSWORD=1123
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 ALLOWED_HOSTS=*
 CSRF_TRUSTED_ORIGINS=http://localhost:5173
+
 
 ### 4. Activar el Entorno Virtual
 
