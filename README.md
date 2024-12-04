@@ -25,26 +25,26 @@ CSRF_TRUSTED_ORIGINS=http://localhost:5173
 crear + activar
 ```
 
-### 5.  Instalar Dependencias
+### 5. Instalar Dependencias
 
 ```
 pip install -r requirements.txt
 ```
 
-### Ejecutar Migraciones
+### 6. Ejecutar Migraciones
 
 ```
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### Crear Superusuario
+### 7. Crear Superusuario
 
 ```
 python manage.py createsuperuser
 ```
 
-###  Iniciar el Servidor
+### 8. Iniciar el Servidor
 
 ```
 python manage.py runserver
