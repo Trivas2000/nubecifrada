@@ -7,7 +7,7 @@
 - Crea una base de datos llamada `nubecifrada`
 
 ### 2. Crear Archivo `.env`
-Crea un archivo `.env` agregue uno de ejemplo, en donde se deberia crear
+Crea un archivo `.env` agregue uno de ejemplo en donde se deberia crear
 
 ```env
 DATABASE_NAME=*Completar*
@@ -20,7 +20,10 @@ CSRF_TRUSTED_ORIGINS=http://localhost:5173
 
 ```
 
-### 4. Activar el Entorno Virtual
+### 4. Crear y Activar el Entorno Virtual
+```
+crear + activar
+```
 
 ### 5.  Instalar Dependencias
 
