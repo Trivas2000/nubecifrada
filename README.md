@@ -10,14 +10,14 @@
 Crea un archivo `.env` en el directorio raíz del proyecto con el siguiente contenido:
 
 ```env
-DATABASE_NAME=nubecifrada
-DATABASE_USER=postgres
-DATABASE_PASSWORD=1123
+DATABASE_NAME=*Completar*
+DATABASE_USER=*Completar*
+DATABASE_PASSWORD=*Completar*
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 ALLOWED_HOSTS=*
 CSRF_TRUSTED_ORIGINS=http://localhost:5173
-{{
+
 ```
 
 ### 4. Activar el Entorno Virtual
