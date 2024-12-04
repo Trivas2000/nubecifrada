@@ -62,7 +62,9 @@ npm install
 
 ###  Iniciar el Servidor
 
+```
 npm run dev
+```
 
 
 Por medio del front deberia poder iniciar sesion con superusuario, deberia funcionar con otro tipo de usuarios pero no lo probe equisde
