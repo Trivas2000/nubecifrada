@@ -6,6 +6,9 @@
 - Yo use postgrest
 - Crea una base de datos llamada `nubecifrada`
 
+Instalar si es necesario y recordar las credenciales de `usuario` y `contraseña` que se piden cuando se instala. 
+Si usaran otra BD tienen que acordarse de sus credenciales. 
+
 Si usan postgrest en la terminal correr lo siguente:
 ```
 psql -U postgres
