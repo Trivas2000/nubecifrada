@@ -22,8 +22,8 @@ Crea un archivo `.env` agregue uno de ejemplo en donde se deberia crear
 
 ```env
 DATABASE_NAME=nubecifrada
-DATABASE_USER=*Completar*
-DATABASE_PASSWORD=*Completar*
+DATABASE_USER=*Completar* -> Es el usuario de postgres cuando se instala al incio, por defecto se crea un usuario postgres.
+DATABASE_PASSWORD=*Completar* -> Ademas en la instalación les pide contraseña asociado a ese usuario, esa es la contraseña que va aqui.
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 ALLOWED_HOSTS=*
@@ -31,8 +31,6 @@ CSRF_TRUSTED_ORIGINS=http://localhost:5173
 
 ```
 
-- DATABASE_USER= Es el usuario de postgres cuando se instala al incio, por defecto se crea un usuario postgres.
-- DATABASE_PASSWORD= Ademas en la instalación les pide contraseña asociado a ese usuario, esa es la contraseña que va aqui.
 
 ### 4. Crear y Activar el Entorno Virtual
 ```
