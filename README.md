@@ -31,8 +31,8 @@ CSRF_TRUSTED_ORIGINS=http://localhost:5173
 
 ```
 
-DATABASE_USER= Es el usuario de postgres cuando se instala al incio, por defecto se crea un usuario postgres.
-DATABASE_PASSWORD= Ademas en la instalación les pide contraseña asociado a ese usuario, esa es la contraseña que va aqui.
+- DATABASE_USER= Es el usuario de postgres cuando se instala al incio, por defecto se crea un usuario postgres.
+- DATABASE_PASSWORD= Ademas en la instalación les pide contraseña asociado a ese usuario, esa es la contraseña que va aqui.
 
 ### 4. Crear y Activar el Entorno Virtual
 ```
