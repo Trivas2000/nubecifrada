@@ -11,7 +11,8 @@ class GrupoCompartido(models.Model):
     uuid_grupo = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False,unique=True)
     nombre_grupo = models.CharField(max_length=255,unique=True)
     uuid_user_admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name="admin_grupos")
-
+    public_key = models.TextField(null=True, blank=True)
+    
     def __str__(self):
         return f"Grupo {self.nombre_grupo} (Admin: {self.uuid_user_admin})"
 
