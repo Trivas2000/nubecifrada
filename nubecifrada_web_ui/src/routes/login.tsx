@@ -44,9 +44,11 @@ const Login = () => {
         <div
           className="w-full h-full bg-cover bg-center flex items-center justify-center"
           style={{
-            backgroundImage: "url('/assets/cloud.png')",
+            backgroundImage: "url('src/assets/cloud.png')",
             backgroundSize: "cover",
             backgroundPosition: "center",
+            width: "60%",
+            height: "23%",
           }}
         ></div>
       </div>

@@ -1,5 +1,5 @@
-import TablaGrupos from "../components/tabla_grupo.tsx";
-import TablaIntegrantesGrupo from "../components/tabla_integrantes_grupo.tsx";
+import TablaGrupos from "../components/tabla_grupo.js";
+import TablaIntegrantesGrupo from "../components/tabla_integrantes_grupo.js";
 import { Button } from 'flowbite-react';
 
 const HomePage: React.FC = () => {
