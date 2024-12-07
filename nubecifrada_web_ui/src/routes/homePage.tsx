@@ -38,7 +38,4 @@ const HomePage: React.FC = () => {
 
 export default HomePage;
 
-git config --global user.email "tomirivasacuna@gmail.com"
-git config --global user.name "Trivas2000"
-ssh-keygen -t ed25519 -C "tomirivasacuna@gmail.com"
 
