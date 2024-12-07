@@ -1,6 +1,8 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import authenticate
+from rest_framework import serializers
+from .models import * 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -26,3 +28,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return super().validate(attrs)
 
 
+class GrupoCompartidoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GrupoCompartido
+        fields = ['uuid_grupo', 'nombre_grupo', 'uuid_user_admin']
