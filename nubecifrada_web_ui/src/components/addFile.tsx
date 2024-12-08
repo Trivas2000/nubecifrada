@@ -8,7 +8,6 @@ export function TextFileUploader() {
     const selectedFile = event.target.files?.[0];
     if (selectedFile && selectedFile.type === "text/plain") {
       setFile(selectedFile);
-      alert(`Archivo válido seleccionado: ${selectedFile.name}`);
     } else {
       alert("Por favor, selecciona un archivo .txt válido.");
       setFile(null);
@@ -17,7 +16,7 @@ export function TextFileUploader() {
   };
 
   return (
-    <div className="flex w-full items-center justify-center">
+    <div className="flex flex-col w-full items-center justify-center">
       <Label
         htmlFor="text-file-input"
         className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-600"
@@ -51,7 +50,7 @@ export function TextFileUploader() {
         />
       </Label>
       {file && (
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="mt-4 text-lg text-gray-600">
           <p>Archivo seleccionado: {file.name}</p>
         </div>
       )}
