@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path
 from django.shortcuts import redirect
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from nubecifrada_api.users.views import *
+from nubecifrada_api.nubecifrada.views import *
 
 def redirect_to_admin(request):
     return redirect('/admin/')

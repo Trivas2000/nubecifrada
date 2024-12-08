@@ -1,12 +1,12 @@
-import TablaGrupos from "../components/tabla_grupo.tsx";
-import TablaIntegrantesGrupo from "../components/tabla_integrantes_grupo.tsx";
+// import TablaGrupos from "../components/tabla_grupo.tsx";
+// import TablaIntegrantesGrupo from "src/components/tabla_integrantes_grupo.js";
 import { Button } from 'flowbite-react';
 import { Link } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
 
 import React, { useEffect, useState } from 'react';
-import CreateGroupForm from "../componets/createGroupForm";
+import CreateGroupForm from '../components/createGroupForm';
 
 interface Grupo {
   uuid_grupo: string;
@@ -20,6 +20,9 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [token,setToken] = useState<string | null>(null);
+
+
+
   const fetchGrupos = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -37,6 +40,8 @@ const HomePage: React.FC = () => {
         throw new Error('Error al obtener los grupos');
       }
       const data = await response.json();
+      console.log("colala",data);
+
       setGrupos(data); // Suponiendo que la respuesta es un array de grupos
     } catch (error: any) {
       setError(error.message);

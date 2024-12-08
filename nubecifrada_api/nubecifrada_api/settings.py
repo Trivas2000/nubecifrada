@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'nubecifrada_api.users',
+    'nubecifrada_api.nubecifrada',
     'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
@@ -70,7 +70,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'nubecifrada_api.urls'
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = 'nubecifrada.User'
 
 TEMPLATES = [
     {

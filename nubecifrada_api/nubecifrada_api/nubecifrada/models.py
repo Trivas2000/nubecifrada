@@ -3,12 +3,12 @@ import uuid
 from django.contrib.auth.models import AbstractUser
 
 class User(AbstractUser):
-
-    # Se cambia el campo 'id' por 'uuid_user' usandi UUIDField
+    # Clave primaria como UUID
     uuid_user = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
- 
+
 class GrupoCompartido(models.Model):
-    uuid_grupo = models.AutoField(primary_key=True)
+    # Clave primaria como UUID
+    uuid_grupo = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     nombre_grupo = models.CharField(max_length=255, unique=True)
     uuid_user_admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name="admin_grupos")
     public_key = models.TextField(null=True, blank=True)
@@ -18,7 +18,8 @@ class GrupoCompartido(models.Model):
 
 # Clase para los integrantes del grupo
 class IntegrantesGrupo(models.Model):
-    uuid_integrantes = models.AutoField(primary_key=True)
+    # Clave primaria como UUID
+    uuid_integrantes = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     uuid_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="grupos_usuario")
     uuid_grupo = models.ForeignKey(GrupoCompartido, on_delete=models.CASCADE, related_name="integrantes")
 
@@ -27,7 +28,8 @@ class IntegrantesGrupo(models.Model):
 
 # Clase para los archivos compartidos
 class ArchivosCompartidos(models.Model):
-    uuid_archivo = models.AutoField(primary_key=True)
+    # Clave primaria como UUID
+    uuid_archivo = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     uuid_grupo = models.ForeignKey(GrupoCompartido, on_delete=models.CASCADE, related_name="archivos")
     path_archivo = models.CharField(max_length=255)
 

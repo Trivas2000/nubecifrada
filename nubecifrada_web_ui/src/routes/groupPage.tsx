@@ -42,7 +42,7 @@ const GroupPage: React.FC = () => {
         throw new Error('Error al obtener los grupos');
       }
       const data = await response.json();
-      setGrupo((data.find((grupo: Grupo) => grupo.uuid_grupo === id))); 
+      setGrupo((data.find((grupo: Grupo) => grupo.uuid_grupo === id)));
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -78,7 +78,7 @@ const GroupPage: React.FC = () => {
     fetchGrupos();
     fetchIntegrantes();
   }, []);
-  
+
   const handleHomeClick = () => {
     navigate('/main');
   };

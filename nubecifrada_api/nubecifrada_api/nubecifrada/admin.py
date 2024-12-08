@@ -11,6 +11,20 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ('uuid_user', 'username', 'email')
     search_fields = ('username', 'email')
 
+
+    # Sobrescribir el método save_model para encriptar la contraseña
+    def save_model(self, request, obj, form, change):
+        """
+        Sobrescribir el método save_model para encriptar la contraseña
+        si se modifica en el formulario.
+        """
+        if 'password' in form.cleaned_data:
+            # Encriptar la contraseña si se modifica
+            obj.set_password(form.cleaned_data['password'])
+        super().save_model(request, obj, form, change)
+
+
+
 @admin.register(GrupoCompartido)
 class GrupoCompartidoAdmin(admin.ModelAdmin):
     list_display = ('uuid_grupo', 'nombre_grupo', 'uuid_user_admin')
