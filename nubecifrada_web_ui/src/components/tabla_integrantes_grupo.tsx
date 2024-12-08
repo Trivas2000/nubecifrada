@@ -4,28 +4,42 @@ import { Button } from 'flowbite-react';
 interface TablaIntegrantesGrupoProps {
   integrantes: any[];
   uuidGrupo: string;
+  handleDelete: () => void;
 }
 
 
-const TablaIntegrantesGrupo: React.FC <TablaIntegrantesGrupoProps> = ({ integrantes, uuidGrupo }) => {
+const TablaIntegrantesGrupo: React.FC <TablaIntegrantesGrupoProps> = ({ integrantes, uuidGrupo, handleDelete }) => {
 
   const eliminarIntegrante = async (uuidIntegrante: string) => {
+    const token = localStorage.getItem('token');
     const url = `http://localhost:8000/api/grupo/${uuidGrupo}/integrante/${uuidIntegrante}/eliminar/`;
+
     try {
-      const response = await fetch(url, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        alert('Integrante eliminado correctamente');
-        // Aquí puedes actualizar la lista de integrantes si es necesario
-      } else {
-        alert('Error al eliminar el integrante');
-      }
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (response.ok) {
+            alert('Integrante eliminado correctamente');
+            handleDelete();
+        } else {
+            const errorData = await response.json();
+            console.error('Error en la respuesta:', errorData);
+            alert('Error al eliminar el integrante');
+        }
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error al eliminar el integrante');
+        console.error('Error:', error);
+        alert('Error al procesar la solicitud');
     }
   };
+
+
+
+
   return (
     <div className="overflow-x-auto w-full md:w-3/4 lg:w-1/2 mx-auto">
       <table className="min-w-full divide-y divide-gray-200 border border-gray-300">

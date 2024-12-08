@@ -4,8 +4,9 @@ import React, { useEffect, useState } from 'react';
 import TablaIntegrantesGrupo from "../components/tabla_integrantes_grupo.js";
 import { Button } from 'flowbite-react';
 import ModalAñadirMiembro from "../components/modal_anadir_miembro.js";
+import ModalIntegrantesGrupo from "../components/modal_integrantes_grupo.js";
 import axios from "axios";
-
+import {TextFileUploader}  from "../components/addFile.js";
 
 interface Grupo {
   uuid_grupo: string;
@@ -19,14 +20,69 @@ interface Integrante {
   uuid_grupo: string;
 }
 
+interface User {
+  uuid_user: string;
+  username: string;
+  first_name: string;
+}
+
+
 const GroupPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [grupo, setGrupo] = useState<Grupo | null>(null);
-  const [integrantes, setIntegrantes] = useState<Integrante[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+    const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
+    const [grupo, setGrupo] = useState<Grupo | null>(null);
+    const [integrantes, setIntegrantes] = useState<Integrante[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [integrantesChanged, setIntegrantesChanged] = useState<boolean>(false);
+    const [allUsers, setAllUsers] = useState<any[]>([]);
+    const [isIntegrantesModalOpen, setIsIntegrantesModalOpen] = useState(false);
+
+
+    useEffect(() => {
+      fetchGrupos();
+      fetchIntegrantes();
+    }, []);
+
+    useEffect(() => {
+      fetchIntegrantes();
+    },[integrantesChanged]);
+
+
+    // Maneja eliminacion desde componente hijo para actualizar integrantes
+    const handleIntegrateChanged = () => {
+      setIntegrantesChanged(!integrantesChanged);
+    }
+
+    const handleHomeClick = () => {
+      navigate('/main');
+    };
+
+    const handleAddMemberClick = () => {
+      setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+      setIsModalOpen(false);
+    };
+
+
+    useEffect(() => {
+      getAllUsers();
+    }, []);
+
+
+    const handleOpenIntegrantesModal = () => {
+      setIsIntegrantesModalOpen(true);
+    };
+
+    const handleCloseIntegrantesModal = () => {
+      setIsIntegrantesModalOpen(false);
+    };
+
+
+
 
   const fetchGrupos = async () => {
     try {
@@ -53,6 +109,7 @@ const GroupPage: React.FC = () => {
     }
   };
 
+
   const fetchIntegrantes = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -72,38 +129,16 @@ const GroupPage: React.FC = () => {
       const data = await response.json();
       console.log(data);
       setIntegrantes(data);
-      
+
     } catch (error: any) {
       setError(error.message);
     }
   };
 
-  useEffect(() => {
-    fetchGrupos();
-    fetchIntegrantes();
-  }, []);
-
-  const handleHomeClick = () => {
-    navigate('/main');
-  };
-
-  const handleAddMemberClick = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const getIntegranteUuid = async (nombre: string): Promise<string | null> => {
-    const url = `http://localhost:8000/api/integrantes/?nombre=${nombre}`;
+  const getAllUsers = async () => {
+    const url = `http://localhost:8000/api/users/`;
     const token = localStorage.getItem('token');
-  
-    if (!token) {
-      alert('Token no encontrado. Debes estar autenticado.');
-      return null;
-    }
-  
+
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -112,33 +147,28 @@ const GroupPage: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (response.ok) {
         const data = await response.json();
-        if (data.length > 0) {
-          return data[0].uuid;
-        } else {
-          alert('Integrante no encontrado');
-          return null;
-        }
+        setAllUsers(data);
+        console.log(data);
       } else {
-        alert('Error al buscar el integrante');
+        alert('Error al buscar los usuarios');
         return null;
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al buscar el integrante');
+      alert('Error al buscar los usuarios');
       return null;
     }
   };
 
 
-  const handleAddMember = async (nombre: string) => {
-    const uuid = await getIntegranteUuid(nombre);
-    if (!uuid) {
-      return;
-    }
-    const url = `http://localhost:8000/api/grupo/${grupo?.uuid_grupo}/integrante/${uuid}/anadir/`;
+
+
+  const handleAddMember = async (uuid_user: string) => {
+
+    const url = `http://localhost:8000/api/grupo/${grupo?.uuid_grupo}/integrante/${uuid_user}/anadir/`;
     const token = localStorage.getItem('token');
 
     if (!token) {
@@ -153,12 +183,10 @@ const GroupPage: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ nombre }),
       });
 
       if (response.ok) {
-        const nuevoIntegrante = await response.json();
-        setIntegrantes((prevIntegrantes) => [...prevIntegrantes, nuevoIntegrante]);
+        handleIntegrateChanged();
         alert('Miembro añadido correctamente');
       } else {
         alert('Error al añadir el miembro');
@@ -167,42 +195,72 @@ const GroupPage: React.FC = () => {
       console.error('Error:', error);
       alert('Error al añadir el miembro');
     }
-  };
+
+
+  }
+
 
   return (
     <div className="h-screen flex flex-col">
-      <div className="flex flex-1">
-        <div className="flex-1 flex flex-col ">
-          <div className="flex flex-col">
-            <div className="flex  -b p-4">
-              <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleHomeClick}>Home</Button>
-            </div>
-            <div className="flex-1 flex justify-center items-center  ">
-              <h2 className="text-6xl font-bold">{grupo?.nombre_grupo}</h2>
-            </div>
+        {/* Encabezado: Nombre del Grupo */}
+        <div className="flex items-center justify-between p-10 border-b px-48">
+          <div className="flex items-center gap-2">
+            <h2 className="text-4xl font-bold">Grupo:</h2>
+            <span className="text-4xl font-normal text-gray-700">
+              {grupo?.nombre_grupo || "Nombre del Grupo"}
+            </span>
           </div>
-          <div className="flex flex-1">
-            <div className="flex-1 flex justify-center items-center  ">
-              <Button gradientDuoTone="purpleToPink" size="xl" onClick={handleAddMemberClick}>Añadir miembro al grupo</Button>
-            </div>
-            <div className="flex-1 flex justify-center items-center  ">
-              <Button gradientDuoTone="purpleToPink" size="xl">Añadir archivo al grupo</Button>
-            </div>
+
+
+          <div className="flex gap-20">
+            <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleAddMemberClick}>
+              Añadir integrantes
+            </Button>
+
+            <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleOpenIntegrantesModal}>
+                Ver Integrantes
+              </Button>
+
+              <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleHomeClick}>
+                Home
+              </Button>
+
           </div>
+
         </div>
-        <div className="flex-1 flex justify-center items-center  ">
-        <h2 className="text-3xl font-bold">Integrantes:</h2>
-        <TablaIntegrantesGrupo integrantes={integrantes} uuidGrupo={grupo?.uuid_grupo}/>
+
+        {/* Zona para subir archivos */}
+        <div className="flex-1 flex-col items-center justify-center border-b px-52 py-10">
+          <p className="text-4xl text-gray-700 mb-6">Subir Archivo</p>
+          <TextFileUploader />
         </div>
-      </div>
-      <div className="flex-1 flex justify-center items-center  ">
-        <TablaGrupos />
-      </div>
-      <div className="flex-1 flex justify-center items-center  ">
-      </div>
-      <ModalAñadirMiembro isOpen={isModalOpen} onClose={handleCloseModal} onAddMember={handleAddMember} />
-    </div>
-    
+
+        {/* Tabla */}
+        <div className="flex-1 flex flex-col items-center justify-center p-5">
+          <h2 className="text-4xl text-gray-700 font-normal mb-4">Tabla Archivos Compartidos</h2>
+          <TablaGrupos />
+        </div>
+
+        {/* Modal para añadir integrantes */}
+        <ModalAñadirMiembro
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onAddMember={handleAddMember}
+          allUsers={allUsers}
+        />
+
+
+        {/* Modal para ver integrantes */}
+        <ModalIntegrantesGrupo
+        isOpen={isIntegrantesModalOpen}
+        onClose={handleCloseIntegrantesModal}
+        integrantes={integrantes}
+        uuidGrupo={grupo?.uuid_grupo || ""}
+        handleDelete={handleIntegrateChanged}
+        />
+
+  </div>
+
   );
 };
 

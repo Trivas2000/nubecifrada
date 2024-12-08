@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 
 from .serializers import *
 from .models import *
@@ -106,28 +106,56 @@ class IntegrantesGrupoView(APIView):
             return Response({"error": "Grupo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
+
 @api_view(['DELETE'])
 def eliminar_integrante(request, uuid_grupo, uuid_integrante):
     try:
-        integrante = IntegrantesGrupo.objects.get(uuid_grupo=uuid_grupo, uuid=uuid_integrante)
+        print(uuid_grupo, uuid_integrante)
+        integrante = IntegrantesGrupo.objects.get(uuid_grupo=uuid_grupo, uuid_user=uuid_integrante)
         integrante.delete()
         return Response({"message": "Integrante eliminado correctamente"}, status=status.HTTP_200_OK)
     except IntegrantesGrupo.DoesNotExist:
         return Response({"error": "Integrante no encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
+
+
 @api_view(['POST'])
 def anadir_integrante(request, uuid_grupo, uuid_integrante):
     try:
+        # Validar que el grupo existe
         grupo = GrupoCompartido.objects.get(uuid_grupo=uuid_grupo)
-        usuario = User.objects.get(uuid=uuid_integrante)
+
+        # Validar que el usuario existe
+        usuario = User.objects.get(uuid_user=uuid_integrante)
+
+        # Crear el integrante
         IntegrantesGrupo.objects.create(uuid_grupo=grupo, uuid_user=usuario)
+
         return Response({"message": "Integrante añadido correctamente"}, status=status.HTTP_201_CREATED)
+
     except GrupoCompartido.DoesNotExist:
         return Response({"error": "Grupo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except User.DoesNotExist:
         return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ObtenerUsuariosView(APIView):
+    """
+    Vista para obtener todos los usuarios registrados.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            # Obtener todos los usuarios
+            usuarios = User.objects.all()
+
+            # Serializar los usuarios
+            serializer = UserSerializer(usuarios, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

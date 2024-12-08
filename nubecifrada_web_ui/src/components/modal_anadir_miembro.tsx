@@ -1,20 +1,33 @@
 import React, { useState } from 'react';
 import { Modal, Button, TextInput } from 'flowbite-react';
+import { Dropdown } from "flowbite-react";
+
+interface User {
+  uuid_user: string;
+  username: string;
+  first_name: string;
+}
 
 interface ModalAñadirMiembroProps {
   isOpen: boolean;
   onClose: () => void;
   onAddMember: (nombre: string) => void;
+  allUsers: User[];
 }
 
-const ModalAñadirMiembro: React.FC<ModalAñadirMiembroProps> = ({ isOpen, onClose, onAddMember }) => {
+const ModalAñadirMiembro: React.FC<ModalAñadirMiembroProps> = ({ isOpen, onClose, onAddMember, allUsers }) => {
   const [nombre, setNombre] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const handleSelectUser = (user: User) => {
+    setSelectedUser(user);
+  };
 
   const handleAddMember = () => {
-    onAddMember(nombre);
-    setNombre('');
-    onClose();
-  };
+    if (selectedUser) {
+      onAddMember(selectedUser.uuid_user);
+    }
+  }
 
   return (
     <Modal show={isOpen} onClose={onClose}>
@@ -22,14 +35,21 @@ const ModalAñadirMiembro: React.FC<ModalAñadirMiembroProps> = ({ isOpen, onClo
         Añadir Miembro al Grupo
       </Modal.Header>
       <Modal.Body>
-        <TextInput
-          id="nombre"
-          type="text"
-          placeholder="Nombre del miembro"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-        />
+        <Dropdown
+          label={selectedUser?.username || "Selecciona un usuario"}
+          inline={true}
+        >
+          {allUsers.map((user) => (
+            <Dropdown.Item
+              key={user.username}
+              onClick={() => handleSelectUser(user)}
+            >
+              {user.username}
+            </Dropdown.Item>
+          ))}
+        </Dropdown>
       </Modal.Body>
+
       <Modal.Footer>
         <Button color="green" onClick={handleAddMember}>
           Añadir

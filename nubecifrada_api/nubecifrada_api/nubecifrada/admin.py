@@ -39,6 +39,5 @@ class IntegrantesGrupoAdmin(admin.ModelAdmin):
 
 @admin.register(ArchivosCompartidos)
 class ArchivosCompartidosAdmin(admin.ModelAdmin):
-    list_display = ('uuid_archivo', 'uuid_grupo', 'path_archivo')
-    search_fields = ('path_archivo',)
+    list_display = ('uuid_archivo', 'uuid_grupo',)
     list_filter = ('uuid_grupo',)

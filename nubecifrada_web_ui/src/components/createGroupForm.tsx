@@ -1,5 +1,4 @@
 import { useState } from "react";
-import axios from "axios";
 
 interface CreateGroupProps {
   onGroupCreated: () => void; // Callback para actualizar la lista de grupos
@@ -16,7 +15,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
         alert("Usuario no autenticado.");
         return;
       }
-  
+
       // Realizar la solicitud usando Fetch API
       const res = await fetch("http://localhost:8000/api/create-group/", {
         method: "POST",
@@ -26,16 +25,16 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
         },
         body: JSON.stringify({ name: groupName }),
       });
-  
+
       // Verificar si la respuesta es exitosa
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Error al crear el grupo.");
       }
-  
+
       const data = await res.json();
       setResponse(data);
-  
+
       // Descargar la clave privada del grupo para guardarla localmente
       const blob = new Blob([data.public_key], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
@@ -44,7 +43,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
       a.download = "group_public_key.txt";
       a.click();
       URL.revokeObjectURL(url);
-  
+
       // Actualizar la lista de grupos
       onGroupCreated();
     } catch (error: any) {

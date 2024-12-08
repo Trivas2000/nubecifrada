@@ -31,7 +31,7 @@ class ArchivosCompartidos(models.Model):
     # Clave primaria como UUID
     uuid_archivo = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     uuid_grupo = models.ForeignKey(GrupoCompartido, on_delete=models.CASCADE, related_name="archivos")
-    path_archivo = models.CharField(max_length=255)
+    archivo_cifrado = models.BinaryField()  # Archivo cifrado en bytes
 
     def __str__(self):
         return f"Archivo {self.uuid_archivo} en Grupo {self.uuid_grupo}"
