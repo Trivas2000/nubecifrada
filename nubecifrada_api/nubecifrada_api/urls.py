@@ -15,5 +15,7 @@ urlpatterns = [
     path('api/grupos/', ObtenerGruposView.as_view(), name='obtener_grupos'),
     path("api/create-group/", CreateGroupView.as_view(), name="create_group"),
     path('', redirect_to_admin),
-    path('grupos/<int:uuid_grupo>/integrantes/', IntegrantesGrupoView.as_view(), name='integrantes-grupo'),
+    path('api/grupos/<uuid:uuid_grupo>/integrantes/', IntegrantesGrupoView.as_view(), name='integrantes-grupo'),
+    path('api/grupo/<uuid:uuid_grupo>/integrante/<uuid:uuid_integrante>/eliminar/', eliminar_integrante, name='eliminar_integrante'),
+    path('api/grupo/<uuid:uuid_grupo>/integrante/<uuid:uuid_integrante>/anadir/', anadir_integrante, name='anadir_integrante')
 ]

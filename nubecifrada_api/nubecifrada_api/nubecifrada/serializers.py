@@ -35,6 +35,8 @@ class GrupoCompartidoSerializer(serializers.ModelSerializer):
         fields = ['uuid_grupo', 'nombre_grupo', 'uuid_user_admin']
 
 class IntegrantesGrupoSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='uuid_user.username', read_only=True)
+
     class Meta:
         model = IntegrantesGrupo
-        fields = ['uuid_integrantes', 'uuid_user', 'uuid_grupo']
+        fields = ['uuid_integrantes', 'uuid_user', 'uuid_grupo','username']

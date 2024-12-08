@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework.decorators import api_view
+
 from .serializers import *
 from .models import *
 import uuid
@@ -35,6 +37,8 @@ class ObtenerGruposView(APIView):
             # Serializar los grupos
             serializer = GrupoCompartidoSerializer(grupos, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
+        except IntegrantesGrupo.DoesNotExist:
+            return Response({"error": "No se encontraron grupos para el usuario"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -54,7 +58,6 @@ class CreateGroupView(APIView):
         try:
             # Generar una clave pública simulada (puedes reemplazar esta lógica)
             public_key = str(2)
-            grupo = None  # Inicializa la variable para evitar errores de referencia
 
             # Crear el grupo
             grupo = GrupoCompartido.objects.create(
@@ -103,3 +106,28 @@ class IntegrantesGrupoView(APIView):
             return Response({"error": "Grupo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+@api_view(['DELETE'])
+def eliminar_integrante(request, uuid_grupo, uuid_integrante):
+    try:
+        integrante = IntegrantesGrupo.objects.get(uuid_grupo=uuid_grupo, uuid=uuid_integrante)
+        integrante.delete()
+        return Response({"message": "Integrante eliminado correctamente"}, status=status.HTTP_200_OK)
+    except IntegrantesGrupo.DoesNotExist:
+        return Response({"error": "Integrante no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['POST'])
+def anadir_integrante(request, uuid_grupo, uuid_integrante):
+    try:
+        grupo = GrupoCompartido.objects.get(uuid_grupo=uuid_grupo)
+        usuario = User.objects.get(uuid=uuid_integrante)
+        IntegrantesGrupo.objects.create(uuid_grupo=grupo, uuid_user=usuario)
+        return Response({"message": "Integrante añadido correctamente"}, status=status.HTTP_201_CREATED)
+    except GrupoCompartido.DoesNotExist:
+        return Response({"error": "Grupo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except User.DoesNotExist:
+        return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

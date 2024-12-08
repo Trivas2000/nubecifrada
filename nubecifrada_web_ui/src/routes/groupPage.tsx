@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import React, { useEffect, useState } from 'react';
 import TablaIntegrantesGrupo from "../components/tabla_integrantes_grupo.js";
 import { Button } from 'flowbite-react';
+import ModalAñadirMiembro from "../components/modal_anadir_miembro.js";
 import axios from "axios";
+
 
 interface Grupo {
   uuid_grupo: string;
@@ -24,6 +26,7 @@ const GroupPage: React.FC = () => {
   const [integrantes, setIntegrantes] = useState<Integrante[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchGrupos = async () => {
     try {
@@ -67,8 +70,9 @@ const GroupPage: React.FC = () => {
         throw new Error('Error al obtener los integrantes del grupo');
       }
       const data = await response.json();
-      setIntegrantes(data);
       console.log(data);
+      setIntegrantes(data);
+      
     } catch (error: any) {
       setError(error.message);
     }
@@ -81,6 +85,88 @@ const GroupPage: React.FC = () => {
 
   const handleHomeClick = () => {
     navigate('/main');
+  };
+
+  const handleAddMemberClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const getIntegranteUuid = async (nombre: string): Promise<string | null> => {
+    const url = `http://localhost:8000/api/integrantes/?nombre=${nombre}`;
+    const token = localStorage.getItem('token');
+  
+    if (!token) {
+      alert('Token no encontrado. Debes estar autenticado.');
+      return null;
+    }
+  
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        if (data.length > 0) {
+          return data[0].uuid;
+        } else {
+          alert('Integrante no encontrado');
+          return null;
+        }
+      } else {
+        alert('Error al buscar el integrante');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al buscar el integrante');
+      return null;
+    }
+  };
+
+
+  const handleAddMember = async (nombre: string) => {
+    const uuid = await getIntegranteUuid(nombre);
+    if (!uuid) {
+      return;
+    }
+    const url = `http://localhost:8000/api/grupo/${grupo?.uuid_grupo}/integrante/${uuid}/anadir/`;
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      alert('Token no encontrado. Debes estar autenticado.');
+      return;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ nombre }),
+      });
+
+      if (response.ok) {
+        const nuevoIntegrante = await response.json();
+        setIntegrantes((prevIntegrantes) => [...prevIntegrantes, nuevoIntegrante]);
+        alert('Miembro añadido correctamente');
+      } else {
+        alert('Error al añadir el miembro');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al añadir el miembro');
+    }
   };
 
   return (
@@ -97,7 +183,7 @@ const GroupPage: React.FC = () => {
           </div>
           <div className="flex flex-1">
             <div className="flex-1 flex justify-center items-center  ">
-              <Button gradientDuoTone="purpleToPink" size="xl">Añadir miembro al grupo</Button>
+              <Button gradientDuoTone="purpleToPink" size="xl" onClick={handleAddMemberClick}>Añadir miembro al grupo</Button>
             </div>
             <div className="flex-1 flex justify-center items-center  ">
               <Button gradientDuoTone="purpleToPink" size="xl">Añadir archivo al grupo</Button>
@@ -106,13 +192,17 @@ const GroupPage: React.FC = () => {
         </div>
         <div className="flex-1 flex justify-center items-center  ">
         <h2 className="text-3xl font-bold">Integrantes:</h2>
-        <TablaIntegrantesGrupo />
+        <TablaIntegrantesGrupo integrantes={integrantes} uuidGrupo={grupo?.uuid_grupo}/>
         </div>
       </div>
       <div className="flex-1 flex justify-center items-center  ">
         <TablaGrupos />
       </div>
+      <div className="flex-1 flex justify-center items-center  ">
+      </div>
+      <ModalAñadirMiembro isOpen={isModalOpen} onClose={handleCloseModal} onAddMember={handleAddMember} />
     </div>
+    
   );
 };
 
