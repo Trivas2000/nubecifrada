@@ -79,3 +79,16 @@ class CreateGroupView(APIView):
 
         except Exception as e:
             return Response({"error": f"Error al crear el grupo: {str(e)}"}, status=500)
+        
+
+class IntegrantesGrupoView(APIView):
+    def get(self, request, uuid_grupo):
+        try:
+            grupo = GrupoCompartido.objects.get(uuid_grupo=uuid_grupo)
+            integrantes = IntegrantesGrupo.objects.filter(uuid_grupo=grupo)
+            serializer = IntegrantesGrupoSerializer(integrantes, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except GrupoCompartido.DoesNotExist:
+            return Response({"error": "Grupo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

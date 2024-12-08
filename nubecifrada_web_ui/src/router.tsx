@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import PrivateRoute from "./routes/privateRoute";
 import Login from "./routes/login";
 import HomePage from "./routes/homePage";
-
+import GroupPage from './routes/groupPage';
 
 
 // Configurar todas la rutas que tendrá la aplicación
@@ -20,6 +20,14 @@ const router = (
                     </PrivateRoute>
                 }
             />
+            <Route
+          path="/group/:id"
+          element={
+            <PrivateRoute>
+              <GroupPage />
+            </PrivateRoute>
+          }
+        />
         </Routes>
     </Router>
 );

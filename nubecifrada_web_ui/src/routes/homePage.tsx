@@ -1,6 +1,9 @@
 import TablaGrupos from "../components/tabla_grupo.tsx";
 import TablaIntegrantesGrupo from "../components/tabla_integrantes_grupo.tsx";
 import { Button } from 'flowbite-react';
+import { Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+
 
 import React, { useEffect, useState } from 'react';
 import CreateGroupForm from "../componets/createGroupForm";
@@ -12,6 +15,7 @@ interface Grupo {
 }
 
 const HomePage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const [grupos, setGrupos] = useState<Grupo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +83,11 @@ const HomePage: React.FC = () => {
                   <span className="font-medium">ID del Grupo:</span>{" "}
                   {grupo.uuid_grupo}
                 </p>
+                <Link to={`/group/${grupo.uuid_grupo}`}>
+                  <Button gradientDuoTone="purpleToPink" size="sm" className="mt-2">
+                    Ver Grupo
+                  </Button>
+                </Link>
               </div>
             ))}
           </div>

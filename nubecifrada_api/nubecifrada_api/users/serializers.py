@@ -32,3 +32,8 @@ class GrupoCompartidoSerializer(serializers.ModelSerializer):
     class Meta:
         model = GrupoCompartido
         fields = ['uuid_grupo', 'nombre_grupo', 'uuid_user_admin']
+
+class IntegrantesGrupoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IntegrantesGrupo
+        fields = ['uuid_integrantes', 'uuid_user', 'uuid_grupo']
