@@ -193,13 +193,97 @@ const GroupPage: React.FC = () => {
       console.error('Error:', error);
       alert('Error al añadir el miembro');
     }
-
-
   }
+
+// ---------------------------------------Generar Claves publicas y privadas---------------------------------------
+
+// ---------------Funcion para generar llaves publicas y privadas----------------
+
+  const generateAndCalculatePublicKey = (groupId: string, generator: number, modulus: number): string => {
+      const g = BigInt(generator);
+      const p = BigInt(modulus);
+
+      // Generar la clave privada aleatoria
+      const privateKey = window.crypto.getRandomValues(new Uint8Array(32)); // 32 bytes = 256 bits
+      const privateKeyInt = BigInt("0x" + Array.from(privateKey).map((b) => b.toString(16).padStart(2, "0")).join(""));
+
+      // Guardar la clave privada en localStorage asociada al grupo
+      const privateKeyBase64 = btoa(String.fromCharCode(...privateKey)); // Codificar como Base64
+      localStorage.setItem(`privateKey-${groupId}`, privateKeyBase64);
+
+      // Mostrar la clave privada generada
+      alert(`Clave privada generada: ${privateKeyInt}`);
+
+      // Calcular la clave pública
+      const publicKey = (g ** privateKeyInt % p).toString();
+
+      return publicKey; // Devolver la clave pública
+  };
+
+
+// ---------------Funcion para registrar llaves publicas----------------
+const registerPublicKey = async (groupId: string, publicKey: string) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Usuario no autenticado.");
+    }
+
+    const response = await fetch(`http://localhost:8000/api/grupos/${groupId}/registrar-clave-publica/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ public_key: publicKey }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Error al registrar la clave pública.");
+    }
+
+    console.log("Clave pública registrada con éxito.");
+  } catch (error) {
+
+      if (error instanceof Error) {
+        console.error("Error al registrar la clave pública:", error.message);
+      } else {
+        console.error("Error desconocido al registrar la clave pública");
+      }
+  }
+
   
   const generateMasterteKey = () =>{
 
   }
+
+};
+
+// ---------------Funcion para manejar el evento de generar claves----------------
+  const handleGenerateKeys = async () => {
+      try {
+        if (!grupo?.uuid_grupo) {
+          console.error("UUID del grupo no está disponible.");
+          return;
+        }
+
+        // hay que obtenerlo desde el backend
+        const generator = 2;
+        const modulus = 23;
+
+        const publicKey = generateAndCalculatePublicKey(grupo.uuid_grupo, generator, modulus);
+        console.log("Clave pública generada:", publicKey);
+
+        await registerPublicKey(grupo.uuid_grupo, publicKey);
+        console.log("Clave pública registrada exitosamente.");
+      } catch (error) {
+        console.error("Error al generar o registrar claves:", error);
+      }
+  };
+
+
+
 
   return (
     <div className="h-screen flex flex-col">
@@ -218,8 +302,18 @@ const GroupPage: React.FC = () => {
             </Button>
 
             <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleOpenIntegrantesModal}>
-                Ver Integrantes
-              </Button>
+              Ver Integrantes
+            </Button>
+
+            <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleHomeClick}>
+              Home
+            </Button>
+
+            <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleGenerateKeys}>
+              Generar Claves
+            </Button>
+
+
 
             <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleHomeClick}>
                 Home
@@ -228,6 +322,8 @@ const GroupPage: React.FC = () => {
               Generar llave maestra
             </Button>
 
+
+
           </div>
 
         </div>
@@ -235,12 +331,17 @@ const GroupPage: React.FC = () => {
         {/* Zona para subir archivos */}
         <div className="flex-1 flex-col items-center justify-center border-b px-52 py-10">
           <p className="text-4xl text-gray-700 mb-6">Subir Archivo</p>
-          <TextFileUploader groupUuid={grupo?.uuid_grupo} userUuid={uuid_user}/>
+
+          {grupo?.uuid_user_admin === uuid_user && (
+          <TextFileUploader groupUuid={grupo?.uuid_grupo} userUuid={uuid_user}/>)
+          }
+
         </div>
 
         {/* Tabla */}
         <div className="flex-1 flex flex-col items-center justify-center p-5">
-          <TablaGrupos groupUuid = {grupo?.uuid_grupo}/>
+          {grupo?.uuid_user_admin === uuid_user && (
+          <TablaGrupos groupUuid = {grupo?.uuid_grupo}/>)}
         </div>
 
         {/* Modal para añadir integrantes */}

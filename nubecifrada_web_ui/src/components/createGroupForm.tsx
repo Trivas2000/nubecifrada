@@ -53,6 +53,10 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
     }
   };
 
+
+
+
+
   return (
     <div className="p-6 bg-gray-100 rounded shadow-lg">
       <h2 className="text-2xl font-bold mb-4">Crear Grupo</h2>
