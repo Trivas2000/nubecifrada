@@ -12,6 +12,31 @@ from .models import *
 import uuid
 import os
 
+'''
+CustomTokenObtainPairView: Vista personalizada para la obtención de tokens JWT. 
+Permite incluir información adicional del usuario (UUID y nombre de usuario) en la respuesta.
+
+ObtenerGruposView: Vista para obtener los grupos a los que pertenece el usuario autenticado.
+Requiere autenticación y devuelve información de los grupos donde el usuario está como integrante.
+
+ObtenerArchivosGrupoView: Vista para listar los archivos compartidos en un grupo específico.
+Requiere autenticación y valida la existencia del grupo antes de listar sus archivos.
+
+CreateGroupView: Vista para crear un nuevo grupo. El creador se añade automáticamente como integrante del grupo.
+Incluye validación del nombre del grupo y manejo de errores en la creación.
+
+IntegrantesGrupoView: Vista para obtener la lista de integrantes de un grupo específico.
+Requiere autenticación y valida la existencia del grupo antes de devolver los datos.
+
+ObtenerUsuariosView: Vista para listar todos los usuarios registrados en la plataforma.
+Requiere autenticación y serializa los datos de los usuarios.
+
+UploadEncryptedFileView: Vista para subir y guardar un archivo cifrado en el sistema.
+Incluye validación de la existencia del grupo y del usuario subidor antes de registrar el archivo.
+
+DescargarArchivoView: Vista para descargar un archivo cifrado previamente subido al sistema.
+Valida la existencia del archivo tanto en la base de datos como en el sistema de archivos.
+'''
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
     Vista personalizada para la obtención de tokens.

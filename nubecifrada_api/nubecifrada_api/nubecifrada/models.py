@@ -5,13 +5,14 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     # Clave primaria como UUID
     uuid_user = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
-    llave_publica = models.CharField(max_length=255, null=True, blank=True, default=None)
-
+    llave_publica = models.CharField(max_length=255, null=True, blank=True, default=None) #esta habria que borrarla 
+ 
 class GrupoCompartido(models.Model):
     # Clave primaria como UUID
     uuid_grupo = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     nombre_grupo = models.CharField(max_length=255, unique=True)
     uuid_user_admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name="admin_grupos")
+    llave_publica_grupo = models.CharField(max_length=255, null=True, blank=True, default=None)
 
     def __str__(self):
         return f"Grupo {self.nombre_grupo} (Admin: {self.uuid_user_admin})"
@@ -23,7 +24,8 @@ class IntegrantesGrupo(models.Model):
     uuid_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="grupos_usuario")
     uuid_grupo = models.ForeignKey(GrupoCompartido, on_delete=models.CASCADE, related_name="integrantes")
     uuid_user_invitador = models.ForeignKey(User, on_delete=models.CASCADE, related_name="invitador",default=None)
-    llave_maestra_cifrada = models.BinaryField(default=b'')  # Llave maestra cifrada en bytes
+    llave_maestra_cifrada = models.BinaryField(default=b'')  # esto tambien habria que borrarlo 
+    llave_publica_usuario = models.CharField(max_length=255, null=True, blank=True, default=None)
 
     def __str__(self):
         return f"Usuario {self.uuid_user} en Grupo {self.uuid_grupo}"
