@@ -13,7 +13,7 @@ import uuid
 import os
 from .generateGroupPublicKeys import generate_group_keys
 '''
-CustomTokenObtainPairView: Vista personalizada para la obtención de tokens JWT. 
+CustomTokenObtainPairView: Vista personalizada para la obtención de tokens JWT.
 Permite incluir información adicional del usuario (UUID y nombre de usuario) en la respuesta.
 
 ObtenerGruposView: Vista para obtener los grupos a los que pertenece el usuario autenticado.
@@ -104,7 +104,7 @@ class ObtenerArchivosGrupoView(APIView):
             # Obtener los archivos compartidos en el grupo
             archivos = ArchivosCompartidos.objects.filter(uuid_grupo=grupo)
 
-            
+
             # Serializar los archivos
             serializer = ArchivosCompartidosSerializer(archivos, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -134,7 +134,7 @@ class CreateGroupView(APIView):
                 uuid_grupo=uuid.uuid4(),
                 nombre_grupo=group_name,
                 uuid_user_admin=request.user,
-           
+
             )
 
             # Añadir al creador del grupo como integrante
@@ -230,7 +230,7 @@ class ObtenerUsuariosView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
 
 
 class UploadEncryptedFileView(APIView):
@@ -239,12 +239,12 @@ class UploadEncryptedFileView(APIView):
         uuid_grupo = request.data.get('uuid_grupo')
         uuid_user_subidor = request.data.get('uuid_user')
         nombre_archivo = request.data.get('nombre_archivo')
-        
+
         # Guardar el archivo cifrado
         file_path = default_storage.save(f"encrypted_files/{file.name}", file)
 
 
-        
+
         # Obtener la instancia de GrupoCompartido
         try:
             grupo = GrupoCompartido.objects.get(uuid_grupo=uuid_grupo)
@@ -287,3 +287,34 @@ class DescargarArchivoView(APIView):
             raise Http404("Archivo no encontrado en el sistema de archivos")
         except Exception as e:
             return HttpResponse(status=500, content=str(e))
+
+
+class RegisterPublicKeyView(APIView):
+    """
+    Vista para registrar o actualizar la clave pública de un usuario en un grupo.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, uuid_grupo):
+        public_key = request.data.get("public_key")
+        if not public_key:
+            return Response({"error": "La clave pública es obligatoria."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Buscar el grupo
+            integrante = IntegrantesGrupo.objects.filter(
+                uuid_user=request.user,
+                uuid_grupo__uuid_grupo=uuid_grupo
+            ).first()
+
+            if not integrante:
+                return Response({"error": "El usuario no pertenece a este grupo o el grupo no existe."}, status=status.HTTP_403_FORBIDDEN)
+
+            # Actualizar la clave pública del usuario en el grupo
+            integrante.llave_publica_usuario = public_key
+            integrante.save()
+
+            return Response({"message": "Clave pública registrada con éxito."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": f"Error al registrar la clave pública: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -29,7 +29,7 @@ export function TextFileUploader({ userUuid, groupUuid }: TextFileUploaderProps)
     try {
       const key = await getKeyFromStorage();
       await encryptAndUploadFile(file, key, userUuid, groupUuid);
-      window.location.reload(); 
+      window.location.reload();
     } catch (error) {
       console.error("Error al cifrar y subir el archivo:", error);
     }
@@ -119,12 +119,12 @@ async function getKeyFromStorage() {
   return importedKey;
 }
 
-async function encryptAndUploadFile(file, key, userUuid, groupUuid) {
+async function encryptAndUploadFile(file: File, key: CryptoKey, userUuid: string, groupUuid: string) {
   const iv = crypto.getRandomValues(new Uint8Array(12)); // Generar un IV
   const fileBuffer = await file.arrayBuffer(); // Convertir el archivo a ArrayBuffer
 
   console.log("IV generado:", iv);
-  
+
   // Cifrar el archivo
   const encryptedContent = await crypto.subtle.encrypt(
     {
