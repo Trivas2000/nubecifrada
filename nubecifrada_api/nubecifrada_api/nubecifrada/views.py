@@ -291,3 +291,20 @@ class DescargarArchivoView(APIView):
             raise Http404("Archivo no encontrado en el sistema de archivos")
         except Exception as e:
             return HttpResponse(status=500, content=str(e))
+        
+
+class ObtenerParametrosGrupo(APIView):
+    """
+    Vista para obtener el generador (g) y el módulo (p) de un grupo.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, uuid_grupo):
+        try:
+            grupo = GrupoCompartido.objects.get(uuid_grupo=uuid_grupo)
+            return Response({
+                "modulo_p": grupo.llave_publica_grupo,
+                "generador_g": grupo.generador_grupo
+            }, status=status.HTTP_200_OK)
+        except GrupoCompartido.DoesNotExist:
+            return Response({"error": "Grupo no encontrado"}, status=status.HTTP_404_NOT_FOUND)

@@ -196,6 +196,10 @@ const GroupPage: React.FC = () => {
 
 
   }
+  
+  const generateMasterteKey = () =>{
+
+  }
 
   return (
     <div className="h-screen flex flex-col">
@@ -217,9 +221,12 @@ const GroupPage: React.FC = () => {
                 Ver Integrantes
               </Button>
 
-              <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleHomeClick}>
+            <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleHomeClick}>
                 Home
-              </Button>
+            </Button>
+            <Button gradientDuoTone="purpleToPink" size="lg" onClick={generateMasterKey}>
+              Generar llave maestra
+            </Button>
 
           </div>
 
