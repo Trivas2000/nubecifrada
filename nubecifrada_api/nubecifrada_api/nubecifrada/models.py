@@ -5,13 +5,13 @@ from django.contrib.auth.models import AbstractUser
 class User(AbstractUser):
     # Clave primaria como UUID
     uuid_user = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
+    llave_publica = models.CharField(max_length=255, null=True, blank=True, default=None)
 
 class GrupoCompartido(models.Model):
     # Clave primaria como UUID
     uuid_grupo = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     nombre_grupo = models.CharField(max_length=255, unique=True)
     uuid_user_admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name="admin_grupos")
-    public_key = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"Grupo {self.nombre_grupo} (Admin: {self.uuid_user_admin})"
@@ -22,6 +22,8 @@ class IntegrantesGrupo(models.Model):
     uuid_integrantes = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     uuid_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="grupos_usuario")
     uuid_grupo = models.ForeignKey(GrupoCompartido, on_delete=models.CASCADE, related_name="integrantes")
+    uuid_user_invitador = models.ForeignKey(User, on_delete=models.CASCADE, related_name="invitador")
+    llave_maestra_cifrada = models.BinaryField()  # Llave maestra cifrada en bytes
 
     def __str__(self):
         return f"Usuario {self.uuid_user} en Grupo {self.uuid_grupo}"
@@ -32,6 +34,8 @@ class ArchivosCompartidos(models.Model):
     uuid_archivo = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     uuid_grupo = models.ForeignKey(GrupoCompartido, on_delete=models.CASCADE, related_name="archivos")
     archivo_cifrado = models.BinaryField()  # Archivo cifrado en bytes
+    nombre_archivo = models.CharField(max_length=255)
+    uuid_user_subidor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="archivos_subidos")
 
     def __str__(self):
         return f"Archivo {self.uuid_archivo} en Grupo {self.uuid_grupo}"
