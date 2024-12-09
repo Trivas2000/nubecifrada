@@ -56,28 +56,27 @@ class CreateGroupView(APIView):
             return Response({"error": "El nombre del grupo es obligatorio"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Generar una clave pública simulada (puedes reemplazar esta lógica)
-            public_key = str(2)
 
             # Crear el grupo
             grupo = GrupoCompartido.objects.create(
                 uuid_grupo=uuid.uuid4(),
                 nombre_grupo=group_name,
                 uuid_user_admin=request.user,
-                public_key=public_key,
+           
             )
 
             # Añadir al creador del grupo como integrante
             IntegrantesGrupo.objects.create(
                 uuid_user=request.user,
-                uuid_grupo=grupo
+                uuid_grupo=grupo,
+                uuid_user_invitador=request.user,
+                llave_maestra_cifrada=b''
             )
 
             # Responder con éxito
             return Response({
                 "message": "Grupo creado exitosamente",
-                "group_id": str(grupo.uuid_grupo),
-                "public_key": public_key,
+                "group_id": str(grupo.uuid_grupo)
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -132,7 +131,7 @@ def anadir_integrante(request, uuid_grupo, uuid_integrante):
         usuario = User.objects.get(uuid_user=uuid_integrante)
 
         # Crear el integrante
-        IntegrantesGrupo.objects.create(uuid_grupo=grupo, uuid_user=usuario)
+        IntegrantesGrupo.objects.create(uuid_grupo=grupo, uuid_user=usuario,uuid_user_invitador=request.user,llave_maestra_cifrada=b'')
 
         return Response({"message": "Integrante añadido correctamente"}, status=status.HTTP_201_CREATED)
 
