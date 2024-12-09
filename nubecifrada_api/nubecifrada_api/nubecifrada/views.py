@@ -11,7 +11,7 @@ from .serializers import *
 from .models import *
 import uuid
 import os
-from .generateGroupPublicKeys import generate_group_keys
+from .generateGroupPublicKeys import generar_generador_y_modulo
 '''
 CustomTokenObtainPairView: Vista personalizada para la obtención de tokens JWT.
 Permite incluir información adicional del usuario (UUID y nombre de usuario) en la respuesta.
@@ -128,13 +128,17 @@ class CreateGroupView(APIView):
             return Response({"error": "El nombre del grupo es obligatorio"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            # Generar generador y módulo para Diffie-Hellman
+            p, g = generar_generador_y_modulo()
 
             # Crear el grupo
             grupo = GrupoCompartido.objects.create(
                 uuid_grupo=uuid.uuid4(),
                 nombre_grupo=group_name,
                 uuid_user_admin=request.user,
-
+                clave-publica
+                generador_grupo=str(g),  # Guardar p (el módulo)
+                modulo_grupo=str(p)  # Guardar g (el generador)
             )
 
             # Añadir al creador del grupo como integrante
@@ -142,13 +146,14 @@ class CreateGroupView(APIView):
                 uuid_user=request.user,
                 uuid_grupo=grupo,
                 uuid_user_invitador=request.user,
-                llave_maestra_cifrada=b''
             )
 
             # Responder con éxito
             return Response({
                 "message": "Grupo creado exitosamente",
-                "group_id": str(grupo.uuid_grupo)
+                "group_id": str(grupo.uuid_grupo),
+                "generador_grupo":grupo.generador_grupo,
+                "modulo_grupo":grupo.modulo_grupo
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -287,6 +292,23 @@ class DescargarArchivoView(APIView):
             raise Http404("Archivo no encontrado en el sistema de archivos")
         except Exception as e:
             return HttpResponse(status=500, content=str(e))
+     
+
+class ObtenerParametrosGrupo(APIView):
+    """
+    Vista para obtener el generador (g) y el módulo (p) de un grupo.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, uuid_grupo):
+        try:
+            grupo = GrupoCompartido.objects.get(uuid_grupo=uuid_grupo)
+            return Response({
+                "modulo_p": grupo.llave_publica_grupo,
+                "generador_g": grupo.generador_grupo
+            }, status=status.HTTP_200_OK)
+        except GrupoCompartido.DoesNotExist:
+            return Response({"error": "Grupo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class RegisterPublicKeyView(APIView):

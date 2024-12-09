@@ -252,6 +252,12 @@ const registerPublicKey = async (groupId: string, publicKey: string) => {
         console.error("Error desconocido al registrar la clave pública");
       }
   }
+
+  
+  const generateMasterteKey = () =>{
+
+  }
+
 };
 
 // ---------------Funcion para manejar el evento de generar claves----------------
@@ -275,6 +281,7 @@ const registerPublicKey = async (groupId: string, publicKey: string) => {
         console.error("Error al generar o registrar claves:", error);
       }
   };
+
 
 
 
@@ -304,6 +311,15 @@ const registerPublicKey = async (groupId: string, publicKey: string) => {
 
             <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleGenerateKeys}>
               Generar Claves
+            </Button>
+
+
+
+            <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleHomeClick}>
+                Home
+            </Button>
+            <Button gradientDuoTone="purpleToPink" size="lg" onClick={generateMasterKey}>
+              Generar llave maestra
             </Button>
 
 

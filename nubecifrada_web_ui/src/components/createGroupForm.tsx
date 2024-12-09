@@ -35,8 +35,9 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
       const data = await res.json();
       setResponse(data);
 
+      const fileContent = `Generador del Grupo: ${data.generador_grupo}\nMódulo del Grupo: ${data.modulo_grupo}`;
       // Descargar la clave privada del grupo para guardarla localmente
-      const blob = new Blob([data.public_key], { type: "text/plain" });
+      const blob = new Blob([fileContent], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
