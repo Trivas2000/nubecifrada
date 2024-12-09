@@ -11,7 +11,7 @@ from .serializers import *
 from .models import *
 import uuid
 import os
-
+from .generateGroupPublicKeys import generate_group_keys
 '''
 CustomTokenObtainPairView: Vista personalizada para la obtención de tokens JWT. 
 Permite incluir información adicional del usuario (UUID y nombre de usuario) en la respuesta.
