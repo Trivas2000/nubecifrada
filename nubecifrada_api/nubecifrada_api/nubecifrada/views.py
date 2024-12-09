@@ -11,7 +11,7 @@ from .serializers import *
 from .models import *
 import uuid
 import os
-from .generateGroupPublicKeys import generate_group_keys
+from .generateGroupPublicKeys import generar_generador_y_modulo
 '''
 CustomTokenObtainPairView: Vista personalizada para la obtención de tokens JWT. 
 Permite incluir información adicional del usuario (UUID y nombre de usuario) en la respuesta.
@@ -128,13 +128,16 @@ class CreateGroupView(APIView):
             return Response({"error": "El nombre del grupo es obligatorio"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            # Generar generador y módulo para Diffie-Hellman
+            p, g = generar_generador_y_modulo()
 
             # Crear el grupo
             grupo = GrupoCompartido.objects.create(
                 uuid_grupo=uuid.uuid4(),
                 nombre_grupo=group_name,
                 uuid_user_admin=request.user,
-           
+                generador_grupo=str(g),  # Guardar p (el módulo)
+                modulo_grupo=str(p)  # Guardar g (el generador)
             )
 
             # Añadir al creador del grupo como integrante
@@ -142,13 +145,14 @@ class CreateGroupView(APIView):
                 uuid_user=request.user,
                 uuid_grupo=grupo,
                 uuid_user_invitador=request.user,
-                llave_maestra_cifrada=b''
             )
 
             # Responder con éxito
             return Response({
                 "message": "Grupo creado exitosamente",
-                "group_id": str(grupo.uuid_grupo)
+                "group_id": str(grupo.uuid_grupo),
+                "generador_grupo":grupo.generador_grupo,
+                "modulo_grupo":grupo.modulo_grupo
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
