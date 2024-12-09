@@ -22,5 +22,6 @@ urlpatterns = [
     path('api/upload/', UploadEncryptedFileView.as_view(), name='upload-encrypted-file'),
     path('api/grupos/<uuid:uuid_grupo>/archivos/', ObtenerArchivosGrupoView.as_view(), name='archivos-grupo'),
     path('api/archivos/<uuid:uuid_archivo>/download/', DescargarArchivoView.as_view(), name='descargar-archivo'),
-        path('api/grupos/<uuid:uuid_grupo>/registrar-clave-publica/', RegisterPublicKeyView.as_view(), name='registrar-clave-publica'),
-]
+    path('api/grupos/<uuid:uuid_grupo>/registrar-clave-publica/', RegisterPublicKeyView.as_view(), name='registrar-clave-publica'),
+    path('api/grupo/<uuid:uuid_grupo>/generador-grupo/', GrupoDetalleView.as_view(), name='generador-grupo'),
+    path('api/grupo/<uuid:uuid_grupo>/usuario-grupo-detalles/', UsuarioGrupoDetalleView.as_view(), name='usuario-grupo-detalles'),]

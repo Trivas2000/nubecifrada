@@ -5,8 +5,8 @@ import TablaIntegrantesGrupo from "../components/tabla_integrantes_grupo.js";
 import { Button } from 'flowbite-react';
 import ModalAñadirMiembro from "../components/modal_anadir_miembro.js";
 import ModalIntegrantesGrupo from "../components/modal_integrantes_grupo.js";
-import axios from "axios";
 import {TextFileUploader}  from "../components/addFile.js";
+import { set } from "react-hook-form";
 
 
 interface Grupo {
@@ -41,6 +41,8 @@ const GroupPage: React.FC = () => {
     const [integrantesChanged, setIntegrantesChanged] = useState<boolean>(false);
     const [allUsers, setAllUsers] = useState<any[]>([]);
     const [isIntegrantesModalOpen, setIsIntegrantesModalOpen] = useState(false);
+
+
 
 
     useEffect(() => {
@@ -199,26 +201,37 @@ const GroupPage: React.FC = () => {
 
 // ---------------Funcion para generar llaves publicas y privadas----------------
 
-  const generateAndCalculatePublicKey = (groupId: string, generator: number, modulus: number): string => {
-      const g = BigInt(generator);
-      const p = BigInt(modulus);
+    const generateAndCalculateKeys = (groupId: string, generator: number, modulus: number): string => {
+        const g = BigInt(generator);
+        const p = BigInt(modulus);
 
-      // Generar la clave privada aleatoria
-      const privateKey = window.crypto.getRandomValues(new Uint8Array(32)); // 32 bytes = 256 bits
-      const privateKeyInt = BigInt("0x" + Array.from(privateKey).map((b) => b.toString(16).padStart(2, "0")).join(""));
+        // Generar la clave privada aleatoria
+        const privateKey = window.crypto.getRandomValues(new Uint8Array(16)); // Reducido a 16 bytes (128 bits)
+        const privateKeyInt = BigInt("0x" + Array.from(privateKey).map((b) => b.toString(16).padStart(2, "0")).join(""));
 
-      // Guardar la clave privada en localStorage asociada al grupo
-      const privateKeyBase64 = btoa(String.fromCharCode(...privateKey)); // Codificar como Base64
-      localStorage.setItem(`privateKey-${groupId}`, privateKeyBase64);
+        // Guardar la clave privada en localStorage asociada al grupo
+        const privateKeyBase64 = btoa(String.fromCharCode(...privateKey)); // Codificar como Base64
+        localStorage.setItem(`privateKey-${groupId}`, privateKeyBase64);
 
-      // Mostrar la clave privada generada
-      alert(`Clave privada generada: ${privateKeyInt}`);
+        // Mostrar la clave privada generada
+        alert(`Clave privada generada: ${privateKeyInt}`);
 
-      // Calcular la clave pública
-      const publicKey = (g ** privateKeyInt % p).toString();
+        // Calcular la clave pública mediante cálculo modular iterativo
+        let publicKey = 1n;
+        let base = g;
 
-      return publicKey; // Devolver la clave pública
-  };
+        let exponent = privateKeyInt;
+        while (exponent > 0n) {
+            if (exponent % 2n === 1n) {
+                publicKey = (publicKey * base) % p;
+            }
+            base = (base * base) % p;
+            exponent = exponent / 2n;
+        }
+
+        return publicKey.toString(); // Devolver la clave pública como string
+    };
+
 
 
 // ---------------Funcion para registrar llaves publicas----------------
@@ -251,37 +264,101 @@ const registerPublicKey = async (groupId: string, publicKey: string) => {
       } else {
         console.error("Error desconocido al registrar la clave pública");
       }
-  }
+  }}
 
-  
-  const generateMasterteKey = () =>{
 
-  }
-
-};
 
 // ---------------Funcion para manejar el evento de generar claves----------------
-  const handleGenerateKeys = async () => {
-      try {
-        if (!grupo?.uuid_grupo) {
-          console.error("UUID del grupo no está disponible.");
-          return;
-        }
 
-        // hay que obtenerlo desde el backend
-        const generator = 2;
-        const modulus = 23;
-
-        const publicKey = generateAndCalculatePublicKey(grupo.uuid_grupo, generator, modulus);
-        console.log("Clave pública generada:", publicKey);
-
-        await registerPublicKey(grupo.uuid_grupo, publicKey);
-        console.log("Clave pública registrada exitosamente.");
-      } catch (error) {
-        console.error("Error al generar o registrar claves:", error);
+const getUsuarioGrupoDetalles = async (uuidGrupo: string) => {
+  try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+          throw new Error("Usuario no autenticado.");
       }
+
+      const response = await fetch(`http://localhost:8000/api/grupo/${uuidGrupo}/usuario-grupo-detalles/`, {
+          method: "GET",
+          headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+          },
+      });
+
+      if (!response.ok) {
+          throw new Error("Error al obtener la información del usuario en el grupo.");
+      }
+
+      const data = await response.json();
+      console.log("Datos del usuario en el grupo:", data);
+      return data;
+  } catch (error) {
+      console.error("Error al obtener la información del usuario en el grupo:", error);
+  }
+};
+
+
+
+//-----------------------------Funcion para obtener generador y modulo----------------
+const fetchGeneratorAndModulus = async (groupId: string) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Usuario no autenticado.");
+
+    const response = await fetch(`http://localhost:8000/api/grupo/${groupId}/generador-grupo/`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) throw new Error("Error al obtener generador y módulo.");
+
+    const data = await response.json();
+
+    return {
+      generator: data.generador_grupo,
+      modulus: data.modulo_grupo,
   };
 
+  } catch (error) {
+    console.error("Error al obtener generador y módulo:", error);
+    throw error; // Lanza el error para manejarlo donde se llame la función
+  }
+};
+
+
+// ---------------Funcion para manejar el evento de generar claves----------------
+const handleGenerateKeys = async () => {
+  try {
+    if (!grupo?.uuid_grupo) {
+      console.error("UUID del grupo no está disponible.");
+      return;
+    }
+
+    // Obtener detalles del usuario en el grupo
+    const userDetails = await getUsuarioGrupoDetalles(grupo.uuid_grupo);
+
+    // Verificar si ya tiene una clave pública
+    if (userDetails.llave_publica_usuario) {
+      alert("La clave pública ya existe. No se generará una nueva.");
+      return; // Salir de la función si ya tiene una clave pública
+    }
+
+
+    // Obtener generador, módulo y verificación de clave pública
+    const { generator, modulus } = await fetchGeneratorAndModulus(grupo.uuid_grupo);
+
+
+    // Generar clave pública
+    const publicKey = generateAndCalculateKeys(grupo.uuid_grupo, generator!, modulus!);
+    console.log("Clave pública generada:", publicKey);
+
+    // Registrar clave pública
+    await registerPublicKey(grupo.uuid_grupo, publicKey);
+    console.log("Clave pública registrada exitosamente.");
+  } catch (error) {
+    console.error("Error al generar o registrar claves:", error);
+  }
+};
 
 
 
@@ -305,21 +382,12 @@ const registerPublicKey = async (groupId: string, publicKey: string) => {
               Ver Integrantes
             </Button>
 
-            <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleHomeClick}>
-              Home
-            </Button>
-
             <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleGenerateKeys}>
               Generar Claves
             </Button>
 
-
-
             <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleHomeClick}>
-                Home
-            </Button>
-            <Button gradientDuoTone="purpleToPink" size="lg" onClick={generateMasterKey}>
-              Generar llave maestra
+              Home
             </Button>
 
 
@@ -332,15 +400,15 @@ const registerPublicKey = async (groupId: string, publicKey: string) => {
         <div className="flex-1 flex-col items-center justify-center border-b px-52 py-10">
           <p className="text-4xl text-gray-700 mb-6">Subir Archivo</p>
 
-          {grupo?.uuid_user_admin === uuid_user && (
+          {grupo?.uuid_grupo && uuid_user && (
           <TextFileUploader groupUuid={grupo?.uuid_grupo} userUuid={uuid_user}/>)
           }
 
         </div>
 
         {/* Tabla */}
-        <div className="flex-1 flex flex-col items-center justify-center p-5">
-          {grupo?.uuid_user_admin === uuid_user && (
+        <div className="flex-1 flex flex-col items-center justify-center px-14">
+          {grupo?.uuid_grupo && uuid_user && (
           <TablaGrupos groupUuid = {grupo?.uuid_grupo}/>)}
         </div>
 
