@@ -33,7 +33,7 @@ class ArchivosCompartidos(models.Model):
     # Clave primaria como UUID
     uuid_archivo = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     uuid_grupo = models.ForeignKey(GrupoCompartido, on_delete=models.CASCADE, related_name="archivos")
-    archivo_cifrado = models.BinaryField()  # Archivo cifrado en bytes
+    ruta_archivo = models.CharField(max_length=255,default="")
     nombre_archivo = models.CharField(max_length=255,default="")
     uuid_user_subidor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="archivos_subidos",default=None)
 

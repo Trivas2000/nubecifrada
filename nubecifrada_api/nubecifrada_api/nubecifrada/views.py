@@ -4,7 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from .serializers import *
 from .models import *
 import uuid
@@ -13,7 +14,23 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     """
     Vista personalizada para la obtención de tokens.
     """
-    serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            response = super().post(request, *args, **kwargs)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            user = serializer.user
+
+            response.data['uuid_user'] = str(user.uuid_user)
+            response.data['username'] = user.username
+
+            return response
+
+        except Exception as e:
+            print(f"Error autenticando usuario: {e}")  # Log para depuración
+            return Response({"detail": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class ObtenerGruposView(APIView):
@@ -158,3 +175,40 @@ class ObtenerUsuariosView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+class UploadEncryptedFileView(APIView):
+    def post(self, request):
+        file = request.FILES.get('file')
+        iv = request.FILES.get('iv')
+        uuid_grupo = request.data.get('uuid_grupo')
+        uuid_user_subidor = request.data.get('uuid_user')
+        nombre_archivo = request.data.get('nombre_archivo')
+        
+        # Guardar el archivo cifrado
+        file_path = default_storage.save(f"encrypted_files/{file.name}", file)
+        iv_path = default_storage.save(f"encrypted_files/{file.name}.iv", iv)
+
+        
+        # Obtener la instancia de GrupoCompartido
+        try:
+            grupo = GrupoCompartido.objects.get(uuid_grupo=uuid_grupo)
+        except GrupoCompartido.DoesNotExist:
+            return Response({"error": "Grupo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Obtener la instancia de User
+        try:
+            user_subidor = User.objects.get(uuid_user=uuid_user_subidor)
+        except User.DoesNotExist:
+            return Response({"error": "Usuario subidor no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Crear el registro en la base de datos
+        ArchivosCompartidos.objects.create(
+            uuid_grupo=grupo,
+            ruta_archivo=file_path,
+            nombre_archivo=nombre_archivo,
+            uuid_user_subidor = user_subidor
+        )
+        return Response({"message": "Archivo cifrado subido correctamente"}, status=status.HTTP_201_CREATED)
+

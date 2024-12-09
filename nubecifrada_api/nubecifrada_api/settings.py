@@ -120,7 +120,7 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
      'USER_ID_FIELD': 'uuid_user', # Campo que se usará para identificar al usuario
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Tiempo de vida del access token
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=300),  # Tiempo de vida del access token
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Tiempo de vida del refresh token
     'ROTATE_REFRESH_TOKENS': True,                  # Rotar el refresh token después de usarlo
     'BLACKLIST_AFTER_ROTATION': True,               # Invalidar el token antiguo después de rotarlo

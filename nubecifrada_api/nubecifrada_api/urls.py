@@ -18,5 +18,6 @@ urlpatterns = [
     path('', redirect_to_admin),
     path('api/grupos/<uuid:uuid_grupo>/integrantes/', IntegrantesGrupoView.as_view(), name='integrantes-grupo'),
     path('api/grupo/<uuid:uuid_grupo>/integrante/<uuid:uuid_integrante>/eliminar/', eliminar_integrante, name='eliminar_integrante'),
-    path('api/grupo/<uuid:uuid_grupo>/integrante/<uuid:uuid_integrante>/anadir/', anadir_integrante, name='anadir_integrante')
+    path('api/grupo/<uuid:uuid_grupo>/integrante/<uuid:uuid_integrante>/anadir/', anadir_integrante, name='anadir_integrante'),
+    path('api/upload/', UploadEncryptedFileView.as_view(), name='upload-encrypted-file')
 ]

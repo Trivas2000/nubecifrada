@@ -28,6 +28,8 @@ const Login = () => {
       console.log(response.data);
       if (response.data) {
         localStorage.setItem("token", response.data.access);
+        localStorage.setItem("username", response.data.username);
+        localStorage.setItem("uuid_user", response.data.uuid_user);
         navigate("/main");  // Redirigir al main
       }
     } catch (err) {

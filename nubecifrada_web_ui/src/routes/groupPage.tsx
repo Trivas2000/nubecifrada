@@ -8,6 +8,7 @@ import ModalIntegrantesGrupo from "../components/modal_integrantes_grupo.js";
 import axios from "axios";
 import {TextFileUploader}  from "../components/addFile.js";
 
+
 interface Grupo {
   uuid_grupo: string;
   nombre_grupo: string;
@@ -29,6 +30,8 @@ interface User {
 
 const GroupPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const username = localStorage.getItem('username');
+    const uuid_user = localStorage.getItem('uuid_user');
     const navigate = useNavigate();
     const [grupo, setGrupo] = useState<Grupo | null>(null);
     const [integrantes, setIntegrantes] = useState<Integrante[]>([]);
@@ -127,7 +130,6 @@ const GroupPage: React.FC = () => {
         throw new Error('Error al obtener los integrantes del grupo');
       }
       const data = await response.json();
-      console.log(data);
       setIntegrantes(data);
 
     } catch (error: any) {
@@ -151,7 +153,6 @@ const GroupPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setAllUsers(data);
-        console.log(data);
       } else {
         alert('Error al buscar los usuarios');
         return null;
@@ -162,9 +163,6 @@ const GroupPage: React.FC = () => {
       return null;
     }
   };
-
-
-
 
   const handleAddMember = async (uuid_user: string) => {
 
@@ -199,10 +197,8 @@ const GroupPage: React.FC = () => {
 
   }
 
-
   return (
     <div className="h-screen flex flex-col">
-        {/* Encabezado: Nombre del Grupo */}
         <div className="flex items-center justify-between p-10 border-b px-48">
           <div className="flex items-center gap-2">
             <h2 className="text-4xl font-bold">Grupo:</h2>
@@ -232,7 +228,7 @@ const GroupPage: React.FC = () => {
         {/* Zona para subir archivos */}
         <div className="flex-1 flex-col items-center justify-center border-b px-52 py-10">
           <p className="text-4xl text-gray-700 mb-6">Subir Archivo</p>
-          <TextFileUploader />
+          <TextFileUploader groupUuid={grupo?.uuid_grupo} userUuid={uuid_user}/>
         </div>
 
         {/* Tabla */}
@@ -249,7 +245,6 @@ const GroupPage: React.FC = () => {
           allUsers={allUsers}
         />
 
-
         {/* Modal para ver integrantes */}
         <ModalIntegrantesGrupo
         isOpen={isIntegrantesModalOpen}
@@ -258,10 +253,7 @@ const GroupPage: React.FC = () => {
         uuidGrupo={grupo?.uuid_grupo || ""}
         handleDelete={handleIntegrateChanged}
         />
-
   </div>
-
   );
 };
-
 export default GroupPage;
