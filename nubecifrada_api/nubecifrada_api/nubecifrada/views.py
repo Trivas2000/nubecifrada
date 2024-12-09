@@ -136,7 +136,6 @@ class CreateGroupView(APIView):
                 uuid_grupo=uuid.uuid4(),
                 nombre_grupo=group_name,
                 uuid_user_admin=request.user,
-                clave-publica
                 generador_grupo=str(g),  # Guardar p (el módulo)
                 modulo_grupo=str(p)  # Guardar g (el generador)
             )
