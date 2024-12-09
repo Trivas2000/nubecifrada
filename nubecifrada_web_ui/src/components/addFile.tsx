@@ -29,6 +29,7 @@ export function TextFileUploader({ userUuid, groupUuid }: TextFileUploaderProps)
     try {
       const key = await getKeyFromStorage();
       await encryptAndUploadFile(file, key, userUuid, groupUuid);
+      window.location.reload(); 
     } catch (error) {
       console.error("Error al cifrar y subir el archivo:", error);
     }
