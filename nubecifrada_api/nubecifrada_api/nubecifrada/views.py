@@ -211,14 +211,13 @@ class ObtenerUsuariosView(APIView):
 class UploadEncryptedFileView(APIView):
     def post(self, request):
         file = request.FILES.get('file')
-        iv = request.FILES.get('iv')
         uuid_grupo = request.data.get('uuid_grupo')
         uuid_user_subidor = request.data.get('uuid_user')
         nombre_archivo = request.data.get('nombre_archivo')
         
         # Guardar el archivo cifrado
         file_path = default_storage.save(f"encrypted_files/{file.name}", file)
-        iv_path = default_storage.save(f"encrypted_files/{file.name}.iv", iv)
+
 
         
         # Obtener la instancia de GrupoCompartido

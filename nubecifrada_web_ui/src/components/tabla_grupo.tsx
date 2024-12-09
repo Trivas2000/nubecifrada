@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { data } from "react-router-dom";
 
 interface Archivo {
   uuid_archivo: string;
@@ -63,7 +64,9 @@ const TablaGrupos: React.FC<TablaGruposProps> = ({ groupUuid }) => {
       const key = await getKeyFromStorage();
 
       console.log("tengo la llave")
-     
+
+      console.log(key);
+      
       const decryptedData = await decryptFile(encryptedData, key);
       const blob = new Blob([decryptedData], { type: "application/octet-stream" });
       const url = URL.createObjectURL(blob);
@@ -80,29 +83,46 @@ const TablaGrupos: React.FC<TablaGruposProps> = ({ groupUuid }) => {
     }
   };
 
-  const getKeyFromStorage = async (): Promise<CryptoKey> => {
+
+  async function getKeyFromStorage() {
     const keyData = localStorage.getItem("encryptionKey");
     if (!keyData) {
-      throw new Error("No se encontró la clave de desencriptación en el almacenamiento local");
+      return null;
     }
-    const keyBuffer = new Uint8Array(JSON.parse(keyData));
-    return await crypto.subtle.importKey(
-      "raw",
-      keyBuffer,
-      { name: "AES-GCM" },
-      false,
-      ["decrypt"]
+    const importedKey = await crypto.subtle.importKey(
+      "jwk",
+      JSON.parse(keyData),
+      {
+        name: "AES-GCM",
+        length: 256,
+      },
+      true,
+      ["encrypt", "decrypt"]
     );
-  };
+  
+    return importedKey;
+  }
 
+  
   const decryptFile = async (encryptedData: ArrayBuffer, key: CryptoKey): Promise<ArrayBuffer> => {
-    const iv = new Uint8Array(encryptedData.slice(0, 12)); // Suponiendo que el IV está en los primeros 12 bytes
-    const data = encryptedData.slice(12);
-    return await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      key,
-      data
-    );
+    try {
+      const iv = new Uint8Array(encryptedData.slice(0, 12)); // Obtén el IV
+      console.log("IV:", iv);
+  
+      const decryptedData = await crypto.subtle.decrypt(
+        {
+          name: "AES-GCM",
+          iv: iv,
+        },
+        key,
+        encryptedData.slice(12) // Datos cifrados
+      );
+      console.log("Datos desencriptados exitosamente");
+      return decryptedData;
+    } catch (error) {
+      console.error("Error al desencriptar los datos:", error);
+      throw new Error("Error al desencriptar los datos");
+    }
   };
 
   return (

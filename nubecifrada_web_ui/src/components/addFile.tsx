@@ -119,9 +119,12 @@ async function getKeyFromStorage() {
 }
 
 async function encryptAndUploadFile(file, key, userUuid, groupUuid) {
-  const iv = crypto.getRandomValues(new Uint8Array(12)); // Generar un vector de inicialización (IV)
+  const iv = crypto.getRandomValues(new Uint8Array(12)); // Generar un IV
   const fileBuffer = await file.arrayBuffer(); // Convertir el archivo a ArrayBuffer
 
+  console.log("IV generado:", iv);
+  
+  // Cifrar el archivo
   const encryptedContent = await crypto.subtle.encrypt(
     {
       name: "AES-GCM",
@@ -131,9 +134,14 @@ async function encryptAndUploadFile(file, key, userUuid, groupUuid) {
     fileBuffer
   );
 
+  // Concatenar el IV y los datos cifrados
+  const combinedData = new Uint8Array(iv.byteLength + encryptedContent.byteLength);
+  combinedData.set(iv, 0); // IV primero
+  combinedData.set(new Uint8Array(encryptedContent), iv.byteLength); // Datos cifrados después
+
+  // Crear el FormData para la solicitud
   const formData = new FormData();
-  formData.append("file", new Blob([encryptedContent]), file.name);
-  formData.append("iv", new Blob([iv]));
+  formData.append("file", new Blob([combinedData]), file.name); // Enviar IV + datos cifrados como un solo archivo
   formData.append("nombre_archivo", file.name);
   formData.append("uuid_user", userUuid);
   formData.append("uuid_grupo", groupUuid);
@@ -143,7 +151,7 @@ async function encryptAndUploadFile(file, key, userUuid, groupUuid) {
   const response = await fetch("http://localhost:8000/api/upload/", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`, // Incluir el token de autenticación en los encabezados
+      Authorization: `Bearer ${token}`,
     },
     body: formData,
   });
