@@ -2,6 +2,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from django.http import HttpResponse, Http404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from django.core.files.storage import default_storage
@@ -9,6 +10,7 @@ from django.core.files.base import ContentFile
 from .serializers import *
 from .models import *
 import uuid
+import os
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
@@ -59,6 +61,34 @@ class ObtenerGruposView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+class ObtenerArchivosGrupoView(APIView):
+    """
+    Vista para obtener los archivos compartidos en un grupo específico.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, uuid_grupo):
+        """
+        Método GET para obtener los archivos compartidos en un grupo.
+        """
+        try:
+            # Verificar que el grupo existe
+            grupo = GrupoCompartido.objects.get(uuid_grupo=uuid_grupo)
+
+            # Obtener los archivos compartidos en el grupo
+            archivos = ArchivosCompartidos.objects.filter(uuid_grupo=grupo)
+
+            
+            # Serializar los archivos
+            serializer = ArchivosCompartidosSerializer(archivos, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except GrupoCompartido.DoesNotExist:
+            return Response({"error": "Grupo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        except ArchivosCompartidos.DoesNotExist:
+            return Response({"error": "No se encontraron archivos para el grupo"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class CreateGroupView(APIView):
     """
@@ -212,3 +242,24 @@ class UploadEncryptedFileView(APIView):
         )
         return Response({"message": "Archivo cifrado subido correctamente"}, status=status.HTTP_201_CREATED)
 
+class DescargarArchivoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, uuid_archivo):
+        try:
+            archivo = ArchivosCompartidos.objects.get(uuid_archivo=uuid_archivo)
+            file_path = archivo.ruta_archivo
+            print(file_path)
+            with open(file_path, 'rb') as f:
+                print("Leyendo archivo")
+                file_data = f.read()
+
+            response = HttpResponse(file_data, content_type='application/octet-stream')
+            response['Content-Disposition'] = f'attachment; filename="{archivo.nombre_archivo}"'
+            return response
+        except ArchivosCompartidos.DoesNotExist:
+            raise Http404("Archivo no encontrado en la base de datos")
+        except FileNotFoundError:
+            raise Http404("Archivo no encontrado en el sistema de archivos")
+        except Exception as e:
+            return HttpResponse(status=500, content=str(e))

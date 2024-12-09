@@ -137,12 +137,6 @@ async function encryptAndUploadFile(file, key, userUuid, groupUuid) {
   formData.append("nombre_archivo", file.name);
   formData.append("uuid_user", userUuid);
   formData.append("uuid_grupo", groupUuid);
-  console.log(file.name);
-  console.log(userUuid);
-  console.log(groupUuid);
-
-
-
 
   const token = localStorage.getItem("token"); // Obtener el token de autenticación
 

@@ -46,3 +46,10 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['uuid_user', 'username', 'email', 'first_name', 'last_name']
+
+class ArchivosCompartidosSerializer(serializers.ModelSerializer):
+    nombre_usuario = serializers.CharField(source='uuid_user_subidor.username', read_only=True)
+
+    class Meta:
+        model = ArchivosCompartidos
+        fields = ['uuid_archivo', 'nombre_archivo', 'ruta_archivo', 'uuid_user_subidor', 'nombre_usuario']

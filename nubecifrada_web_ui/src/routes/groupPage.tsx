@@ -233,8 +233,7 @@ const GroupPage: React.FC = () => {
 
         {/* Tabla */}
         <div className="flex-1 flex flex-col items-center justify-center p-5">
-          <h2 className="text-4xl text-gray-700 font-normal mb-4">Tabla Archivos Compartidos</h2>
-          <TablaGrupos />
+          <TablaGrupos groupUuid = {grupo?.uuid_grupo}/>
         </div>
 
         {/* Modal para añadir integrantes */}
