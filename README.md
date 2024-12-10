@@ -81,5 +81,45 @@ npm install
 npm run dev
 ```
 
+## Como utilizar:
 
-Por medio del front deberia poder iniciar sesion con superusuario, deberia funcionar con otro tipo de usuarios pero no lo probe equisde
+
+### 1. Crear dos usuarios desde la terminal:
+
+```
+http://127.0.0.1:8000/admin
+```
+
+### 2. Iniciar sesion con usuario 1 en:
+
+```
+http://localhost:5173/
+```
+
+### 3. Crear grupo asignando nombre
+
+### 4. Ingresar al grupo y apretar boton generar tus claves u1
+
+### 5. Invitar a usuario 2
+
+### 6. Ingresar con usuario 2, volviendo a recargar :
+
+```
+http://localhost:5173/
+```
+
+### 7. Ingresar al grupo y  apretar boton generar tus claves para u2
+
+### 8. Ingresar con usuario 1, volviendo a recargar nuevamente:
+
+```
+http://localhost:5173/
+```
+
+### 9. Ingresar al grupo (se genera comunicacion con v2, visible por la consola de inspector), ahora es posible compartir archivos txt con el usuario que invitaste c:
+
+### 10. Subir un archivo de prueba, que podra ser accesible por ti y usuario invitado. 
+
+### 11. Ingresar con ususario2 y descargar archivo c:
+
+
