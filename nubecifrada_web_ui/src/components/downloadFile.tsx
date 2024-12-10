@@ -42,27 +42,6 @@ const DownloadFile: React.FC<DownloadFileProps> = ({ uuid_archivo, nombre_archiv
 
 
 //---------------------------------Desencriptar clave maestra y almacenarla---------------------------------
-  // Cifrar la masterKey con la clave compartida usando AES-GCM
-  async function encryptMasterKey(sharedKey: CryptoKey, masterKey: string): Promise<Uint8Array> {
-    const iv = window.crypto.getRandomValues(new Uint8Array(12)); // Initialization Vector (IV)
-    const encoder = new TextEncoder();
-    const data = encoder.encode(masterKey);
-
-    const encryptedData = await window.crypto.subtle.encrypt(
-      {
-        name: 'AES-GCM',
-        iv: iv,
-      },
-      sharedKey,
-      data
-    );
-    const combinedData = new Uint8Array(iv.byteLength + encryptedData.byteLength);
-    combinedData.set(iv, 0); // IV primero
-    combinedData.set(new Uint8Array(encryptedData), iv.byteLength); // Datos cifrados después
-
-    return combinedData ;
-  }
-
 
   // Desencriptar la clave maestra con la clave compartida
   async function decryptMasterKey(sharedKey: CryptoKey, encryptedData: Uint8Array): Promise<string> {
