@@ -119,6 +119,8 @@ async function getKeyFromStorage() {
   return importedKey;
 }
 
+
+
 async function encryptAndUploadFile(file: File, key: CryptoKey, userUuid: string, groupUuid: string) {
   const iv = crypto.getRandomValues(new Uint8Array(12)); // Generar un IV
   const fileBuffer = await file.arrayBuffer(); // Convertir el archivo a ArrayBuffer

@@ -211,41 +211,45 @@ const GroupPage: React.FC = () => {
 
 // ---------------Funcion para generar llaves publicas y privadas----------------
 
-    const generateAndCalculateKeys = (groupId: string, generator: number, modulus: number): string => {
-        const g = BigInt(generator);
-        const p = BigInt(modulus);
 
-        // Generar la clave privada aleatoria
-        const privateKey = window.crypto.getRandomValues(new Uint8Array(16)); // Reducido a 16 bytes (128 bits)
-        const privateKeyInt = BigInt("0x" + Array.from(privateKey).map((b) => b.toString(16).padStart(2, "0")).join(""));
+  const generateKeysWithCrypto = async (groupId: string): Promise<string> => {
+    try {
+        // Configurar los parámetros ECDH con la curva P-256
+        const ecParams: EcKeyGenParams = {
+            name: "ECDH",
+            namedCurve: "P-256", // Usamos la curva estándar P-256
+        };
 
-        // Guardar la clave privada en localStorage asociada al grupo
-        const privateKeyBase64 = btoa(String.fromCharCode(...privateKey)); // Codificar como Base64
-        localStorage.setItem(`privateKey-${groupId}`, privateKeyBase64);
+        // Generar el par de claves
+        const keyPair = (await crypto.subtle.generateKey(
+            ecParams,
+            true, // Claves exportables
+            ["deriveKey", "deriveBits"]
+        )) as CryptoKeyPair; // Especificamos el tipo como CryptoKeyPair
 
-        // Mostrar la clave privada generada
-        alert(`Clave privada generada: ${privateKeyInt}`);
+        // Exportar la clave privada y guardarla en localStorage
+        const privateKey = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+        localStorage.setItem(`privateKey-${groupId}`, JSON.stringify(privateKey));
 
-        // Calcular la clave pública mediante cálculo modular iterativo
-        let publicKey = 1n;
-        let base = g;
+        // Exportar la clave pública
+        const publicKey = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
 
-        let exponent = privateKeyInt;
-        while (exponent > 0n) {
-            if (exponent % 2n === 1n) {
-                publicKey = (publicKey * base) % p;
-            }
-            base = (base * base) % p;
-            exponent = exponent / 2n;
-        }
+        // Convertir la clave pública a una representación Base64
+        const publicKeyBase64 = btoa(JSON.stringify(publicKey));
 
-        return publicKey.toString(); // Devolver la clave pública como string
-    };
+        return publicKeyBase64; // Devuelve la clave pública como Base64
+    } catch (error) {
+        console.error("Error al generar claves ECDH:", error);
+        throw error;
+    }
+  };
 
 
+
+  type Base64 = string;
 
 // ---------------Funcion para registrar llaves publicas----------------
-const registerPublicKey = async (groupId: string, publicKey: string) => {
+const registerPublicKey = async (groupId: string, publicKey: Base64) => {
   try {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -358,11 +362,14 @@ const handleGenerateKeys = async () => {
 
 
     // Generar clave pública
-    const publicKey = generateAndCalculateKeys(grupo.uuid_grupo, generator!, modulus!);
+    const publicKey = await generateKeysWithCrypto(grupo.uuid_grupo,);
     console.log("Clave pública generada:", publicKey);
+    alert("La clave pública se ha generado y registrado exitosamente.");
 
     // Registrar clave pública
     await registerPublicKey(grupo.uuid_grupo, publicKey);
+
+
     console.log("Clave pública registrada exitosamente.");
   } catch (error) {
     console.error("Error al generar o registrar claves:", error);
