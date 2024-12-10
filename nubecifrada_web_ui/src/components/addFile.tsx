@@ -27,7 +27,8 @@ export function TextFileUploader({ userUuid, groupUuid }: TextFileUploaderProps)
     }
 
     try {
-      const key = await getKeyFromStorage();
+      // Obtener la masterKey desde localStorage e importarla
+      const key = await getMasterKeyFromStorage(groupUuid);
       await encryptAndUploadFile(file, key, userUuid, groupUuid);
       window.location.reload();
     } catch (error) {
@@ -66,7 +67,7 @@ export function TextFileUploader({ userUuid, groupUuid }: TextFileUploaderProps)
           id="text-file-input"
           className="hidden"
           onChange={handleFileChange}
-          accept=".txt" // Permite solo archivos .txt
+          accept=".txt"
         />
       </Label>
       {file && (
@@ -84,30 +85,18 @@ export function TextFileUploader({ userUuid, groupUuid }: TextFileUploaderProps)
   );
 }
 
-async function generateAndStoreKey() {
-  const key = await crypto.subtle.generateKey(
-    {
-      name: "AES-GCM",
-      length: 256,
-    },
-    true,
-    ["encrypt", "decrypt"]
-  );
-
-  const exportedKey = await crypto.subtle.exportKey("jwk", key);
-  localStorage.setItem("encryptionKey", JSON.stringify(exportedKey));
-}
-
-async function getKeyFromStorage() {
-  const keyData = localStorage.getItem("encryptionKey");
+async function getMasterKeyFromStorage(groupUuid: string): Promise<CryptoKey> {
+  const keyData = localStorage.getItem(`masterKey-${groupUuid}`);
   if (!keyData) {
-    await generateAndStoreKey();
-    return getKeyFromStorage();
+    throw new Error("No se encontró la masterKey en localStorage. Debes establecerla antes de subir archivos.");
   }
 
+  console.log("MasterKey encontrada en localStorage:", keyData);
+
+  const jwk = JSON.parse(keyData);
   const importedKey = await crypto.subtle.importKey(
     "jwk",
-    JSON.parse(keyData),
+    jwk,
     {
       name: "AES-GCM",
       length: 256,
@@ -116,10 +105,9 @@ async function getKeyFromStorage() {
     ["encrypt", "decrypt"]
   );
 
+  console.log("MasterKey importada:", importedKey);
   return importedKey;
 }
-
-
 
 async function encryptAndUploadFile(file: File, key: CryptoKey, userUuid: string, groupUuid: string) {
   const iv = crypto.getRandomValues(new Uint8Array(12)); // Generar un IV
@@ -127,7 +115,7 @@ async function encryptAndUploadFile(file: File, key: CryptoKey, userUuid: string
 
   console.log("IV generado:", iv);
 
-  // Cifrar el archivo
+  // Cifrar el archivo usando la masterKey
   const encryptedContent = await crypto.subtle.encrypt(
     {
       name: "AES-GCM",
@@ -139,17 +127,17 @@ async function encryptAndUploadFile(file: File, key: CryptoKey, userUuid: string
 
   // Concatenar el IV y los datos cifrados
   const combinedData = new Uint8Array(iv.byteLength + encryptedContent.byteLength);
-  combinedData.set(iv, 0); // IV primero
-  combinedData.set(new Uint8Array(encryptedContent), iv.byteLength); // Datos cifrados después
+  combinedData.set(iv, 0);
+  combinedData.set(new Uint8Array(encryptedContent), iv.byteLength);
 
   // Crear el FormData para la solicitud
   const formData = new FormData();
-  formData.append("file", new Blob([combinedData]), file.name); // Enviar IV + datos cifrados como un solo archivo
+  formData.append("file", new Blob([combinedData]), file.name);
   formData.append("nombre_archivo", file.name);
   formData.append("uuid_user", userUuid);
   formData.append("uuid_grupo", groupUuid);
 
-  const token = localStorage.getItem("token"); // Obtener el token de autenticación
+  const token = localStorage.getItem("token");
 
   const response = await fetch("http://localhost:8000/api/upload/", {
     method: "POST",

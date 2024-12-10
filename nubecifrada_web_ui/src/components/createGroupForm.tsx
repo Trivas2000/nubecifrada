@@ -17,18 +17,18 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
       true,
       ["encrypt", "decrypt"]
     );
-  
+
     const exportedKey = await crypto.subtle.exportKey("jwk", key);
     localStorage.setItem("encryptionKey", JSON.stringify(exportedKey));
   }
-  
+
   async function getKeyFromStorage() {
     const keyData = localStorage.getItem("encryptionKey");
     if (!keyData) {
       await generateAndStoreKey();
       return getKeyFromStorage();
     }
-  
+
     const importedKey = await crypto.subtle.importKey(
       "jwk",
       JSON.parse(keyData),
@@ -39,7 +39,7 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
       true,
       ["encrypt", "decrypt"]
     );
-  
+
     return importedKey;
   }
 
@@ -73,7 +73,8 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
       const key = await getKeyFromStorage();
       const exportedKey = await crypto.subtle.exportKey("jwk", key);
       const readableKey = exportedKey.k || JSON.stringify(exportedKey); // Representación legible
-      localStorage.setItem(`masterKey-${data.group_id}`, readableKey);
+      localStorage.setItem(`masterKey-${data.group_id}`, JSON.stringify(exportedKey));
+
       const fileContent = `Generador del Grupo: ${data.generador_grupo}\nMódulo del Grupo: ${data.modulo_grupo}\nClaveMaestraDelGrupo: ${readableKey}`;
       // Descargar la clave privada del grupo para guardarla localmente
       const blob = new Blob([fileContent], { type: "text/plain" });

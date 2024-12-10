@@ -400,7 +400,7 @@ useEffect(() => {
       if (!token) {
         throw new Error('Token no encontrado. Debes estar autenticado.');
       }
-    
+
       console.log(id);
       const response = await fetch(
         `http://localhost:8000/api/${id}/integrantes-pendientes/`,
@@ -423,7 +423,7 @@ useEffect(() => {
         console.log('No hay usuarios pendientes para enviar la llave maestra.');
       } else {
         console.log('Usuarios pendientes:', data);
-        
+
         if(id){
           console.log("iniciando compartir llave maestra")
           const masterKey = localStorage.getItem(`masterKey-${id}`);
@@ -436,8 +436,8 @@ useEffect(() => {
           // Convertir la clave privada del usuario a un formato adecuado (ArrayBuffer)
           const storedKey = localStorage.getItem(`privateKey-${id}`);
           const privateKeyArrayBuffer = JSON.parse(atob(storedKey));
-          
-  
+
+
           for (const user of data) {
             console.log(`Enviando llave maestra a ${user.uuid_user}`);
             const publicKeyJson = JSON.parse(atob(user.llave_publica_usuario));
@@ -452,7 +452,7 @@ useEffect(() => {
 
             // 3. Cifrar la masterKey usando la clave compartida
             const encryptedMasterKey = await encryptMasterKey(sharedKey, masterKey);
-  
+
             // 4. Enviar la clave maestra cifrada al backend
             await sendMasterKey(user.uuid_user, encryptedMasterKey);
           }
@@ -546,7 +546,7 @@ async function sendMasterKey(uuid_user: string, encryptedMasterKey: Uint8Array):
   }
   console.log("enviando masterkey cifrada")
   const response = await fetch(
-    `http://localhost:8000/api/enviar-masterkey/`, 
+    `http://localhost:8000/api/enviar-masterkey/`,
     {
       method: 'POST',
       headers: {
