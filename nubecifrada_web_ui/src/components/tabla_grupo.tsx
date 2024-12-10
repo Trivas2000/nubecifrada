@@ -54,7 +54,7 @@ const TablaGrupos: React.FC<TablaGruposProps> = ({ groupUuid }) => {
                 <td className="py-2 px-4 border-b border-gray-200">{archivo.nombre_archivo}</td>
                 <td className="py-2 px-4 border-b border-gray-200">{archivo.nombre_usuario}</td>
                 <td className="py-2 px-4 border-b border-gray-200">
-                  <DownloadFile uuid_archivo={archivo.uuid_archivo} nombre_archivo={archivo.nombre_archivo} />
+                  <DownloadFile uuid_archivo={archivo.uuid_archivo} nombre_archivo={archivo.nombre_archivo}  uuid_grupo={groupUuid}/>
                 </td>
               </tr>
             ))}

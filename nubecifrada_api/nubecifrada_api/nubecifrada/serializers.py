@@ -33,12 +33,16 @@ class GrupoCompartidoSerializer(serializers.ModelSerializer):
     class Meta:
         model = GrupoCompartido
         fields = ['uuid_grupo', 'nombre_grupo', 'generador_grupo', 'modulo_grupo']
+
+
 class IntegrantesGrupoSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='uuid_user.username', read_only=True)
+    llave_publica_invitador = serializers.CharField(source='uuid_user_invitador.llave_publica_usuario', read_only=True)
 
     class Meta:
         model = IntegrantesGrupo
         fields = '__all__'
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
