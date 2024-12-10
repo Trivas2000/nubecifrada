@@ -229,7 +229,7 @@ const GroupPage: React.FC = () => {
 
         // Exportar la clave privada y guardarla en localStorage
         const privateKey = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
-        localStorage.setItem(`privateKey-${groupId}`, JSON.stringify(privateKey));
+        localStorage.setItem(`privateKey-${groupId}`, btoa(JSON.stringify(privateKey)));
 
         // Exportar la clave pública
         const publicKey = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
@@ -376,6 +376,19 @@ const handleGenerateKeys = async () => {
   }
 };
 
+
+// Convierte la cadena base64 a ArrayBuffer
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  const binaryString = atob(base64);
+  const length = binaryString.length;
+  const buffer = new ArrayBuffer(length);
+  const view = new Uint8Array(buffer);
+  for (let i = 0; i < length; i++) {
+    view[i] = binaryString.charCodeAt(i);
+  }
+  return buffer;
+}
+
   /*
   cada vez que ingreso a un grupo se chequea si debo enviarle a alguien la llave maestra.
   */
@@ -387,7 +400,8 @@ useEffect(() => {
       if (!token) {
         throw new Error('Token no encontrado. Debes estar autenticado.');
       }
-
+    
+      console.log(id);
       const response = await fetch(
         `http://localhost:8000/api/${id}/integrantes-pendientes/`,
         {
@@ -409,30 +423,43 @@ useEffect(() => {
         console.log('No hay usuarios pendientes para enviar la llave maestra.');
       } else {
         console.log('Usuarios pendientes:', data);
-        const masterKey = localStorage.getItem(`masterKey-${id}`);
-        const privateKey  = localStorage.getItem(`privateKey-${id}`);
+        
+        if(id){
+          console.log("iniciando compartir llave maestra")
+          const masterKey = localStorage.getItem(`masterKey-${id}`);
+          const privateKey  = localStorage.getItem(`privateKey-${id}`);
+          console.log(masterKey);
+          console.log(privateKey);
+          if (!masterKey || !privateKey) {
+            throw new Error('La clave maestra o la clave privada no están disponibles');
+          }
+          // Convertir la clave privada del usuario a un formato adecuado (ArrayBuffer)
+          const privateKeyArrayBuffer = new TextEncoder().encode(privateKey);
+  
+          for (const user of data) {
+            console.log(`Enviando llave maestra a ${user.uuid_user}`);
+  
+            // 1. Convertir la clave pública del destinatario desde el backend a ArrayBuffer
+            //const publicKeyArrayBuffer = hexStringToArrayBuffer(user.llave_publica_usuario);
+            /*
+            // 2. Generar la clave compartida usando Diffie-Hellman
+            console.log("generando clave compartida")
+            const binaryString_private = atob(privateKey);
+            const privateKeyArrayBuffer = Uint8Array.from(binaryString_private, char => char.charCodeAt(0)).buffer;
+            const binaryString_master = atob(user.llave_publica_usuario);
+            const publicKeyArrayBuffer = Uint8Array.from(binaryString_master, char => char.charCodeAt(0)).buffer;
+            const sharedKey = await generateSharedKey(privateKeyArrayBuffer, publicKeyArrayBuffer);
+            */
+            const privateKeyArrayBuffer = base64ToArrayBuffer(privateKey);
+            const publicKeyArrayBuffer = base64ToArrayBuffer(user.llave_publica_usuario);
+            const sharedKey = await generateSharedKey(privateKeyArrayBuffer, publicKeyArrayBuffer);
 
-        if (!masterKey || !privateKey) {
-          throw new Error('La clave maestra o la clave privada no están disponibles');
-        }
-
-        // Convertir la clave privada del usuario a un formato adecuado (ArrayBuffer)
-        const privateKeyArrayBuffer = new TextEncoder().encode(privateKey);
-
-        for (const user of data) {
-          console.log(`Enviando llave maestra a ${user.uuid_user}`);
-
-          // 1. Convertir la clave pública del destinatario desde el backend a ArrayBuffer
-          const publicKeyArrayBuffer = hexStringToArrayBuffer(user.llave_publica_usuario);
-
-          // 2. Generar la clave compartida usando Diffie-Hellman
-          const sharedKey = await generateSharedKey(privateKeyArrayBuffer, publicKeyArrayBuffer);
-
-          // 3. Cifrar la masterKey usando la clave compartida
-          const encryptedMasterKey = await encryptMasterKey(sharedKey, masterKey);
-
-          // 4. Enviar la clave maestra cifrada al backend
-          await sendMasterKey(user.uuid_user, encryptedMasterKey);
+            // 3. Cifrar la masterKey usando la clave compartida
+            const encryptedMasterKey = await encryptMasterKey(sharedKey, masterKey);
+  
+            // 4. Enviar la clave maestra cifrada al backend
+            await sendMasterKey(user.uuid_user, encryptedMasterKey);
+          }
         }
       }
     } catch (error: any) {
@@ -461,7 +488,7 @@ async function generateSharedKey(privateKeyArrayBuffer: ArrayBuffer, publicKeyAr
       name: 'ECDH',
       namedCurve: 'P-256',
     },
-    false,
+    true,
     ['deriveKey']
   );
 
@@ -472,8 +499,8 @@ async function generateSharedKey(privateKeyArrayBuffer: ArrayBuffer, publicKeyAr
       name: 'ECDH',
       namedCurve: 'P-256',
     },
-    false,
-    []
+    true,
+    ['deriveKey']
   );
 
   const sharedKey = await window.crypto.subtle.deriveKey(
@@ -520,7 +547,7 @@ async function sendMasterKey(uuid_user: string, encryptedMasterKey: Uint8Array):
   if (!token) {
     throw new Error('Token no encontrado.');
   }
-
+  console.log("enviando masterkey cifrada")
   const response = await fetch(
     `http://localhost:8000/api/enviar-masterkey/`, 
     {

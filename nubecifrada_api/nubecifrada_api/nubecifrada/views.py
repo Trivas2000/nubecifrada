@@ -353,21 +353,21 @@ class IfsendMasterKey(APIView):
         try:
             usuario = request.user
 
-            # Filtrar usuarios invitados por el usuario actual dentro del grupo especificado
             usuarios_pendientes = IntegrantesGrupo.objects.filter(
-                uuid_user_invitador=usuario,  # Invitados por el usuario actual
-                uuid_grupo__uuid_grupo=uuid_grupo,  # Dentro del grupo especificado
-            ).exclude(
-                uuid_user=usuario  # Excluir al creador del grupo (el usuario actual)
-            ).filter(
-                llave_publica_usuario__isnull=False,  # Solo los que tienen clave pública agregada
+            uuid_user_invitador=usuario,
+            uuid_grupo__uuid_grupo=uuid_grupo
+            )
+            usuarios_pendientes = usuarios_pendientes.exclude(uuid_user=usuario)
+            usuarios_pendientes = usuarios_pendientes.filter(
+                llave_publica_usuario__isnull=False,
                 llave_maestra_cifrada=b''
-            ).values("uuid_user", "uuid_grupo","llave_publica_usuario")
-            respuesta = list(usuarios_pendientes)
-            if not respuesta:
+            )
+            print("Después de filtrar por clave pública y maestra:", usuarios_pendientes)
+            serializer = IntegrantesGrupoSerializer(usuarios_pendientes, many=True)
+            if not serializer:
                 return Response([], status=status.HTTP_200_OK
                 )
-            return Response(respuesta, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         
         except Exception as e:
             # Manejo genérico de errores

@@ -68,11 +68,12 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
       }
 
       const data = await res.json();
+      console.log(data);
       setResponse(data);
       const key = await getKeyFromStorage();
       const exportedKey = await crypto.subtle.exportKey("jwk", key);
       const readableKey = exportedKey.k || JSON.stringify(exportedKey); // Representación legible
-      localStorage.setItem(`masterKey-${response.groupId}`, readableKey);
+      localStorage.setItem(`masterKey-${data.group_id}`, readableKey);
       const fileContent = `Generador del Grupo: ${data.generador_grupo}\nMódulo del Grupo: ${data.modulo_grupo}\nClaveMaestraDelGrupo: ${readableKey}`;
       // Descargar la clave privada del grupo para guardarla localmente
       const blob = new Blob([fileContent], { type: "text/plain" });
