@@ -27,6 +27,16 @@ interface User {
   first_name: string;
 }
 
+interface UserData {
+  uuid_user: string;
+  llave_publica_usuario: string;
+  uuid_grupo: string;
+}
+
+interface EncryptedData {
+  encryptedData: ArrayBuffer;
+  iv: ArrayBuffer;
+}
 
 const GroupPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -325,7 +335,6 @@ const fetchGeneratorAndModulus = async (groupId: string) => {
   }
 };
 
-
 // ---------------Funcion para manejar el evento de generar claves----------------
 const handleGenerateKeys = async () => {
   try {
@@ -360,8 +369,184 @@ const handleGenerateKeys = async () => {
   }
 };
 
+  /*
+  cada vez que ingreso a un grupo se chequea si debo enviarle a alguien la llave maestra.
+  */
 
+useEffect(() => {
+  const checkPendingUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Token no encontrado. Debes estar autenticado.');
+      }
 
+      const response = await fetch(
+        `http://localhost:8000/api/${id}/integrantes-pendientes/`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error al obtener los integrantes pendientes');
+      }
+
+      const data = await response.json();
+
+      if (data.length === 0) {
+        console.log('No hay usuarios pendientes para enviar la llave maestra.');
+      } else {
+        console.log('Usuarios pendientes:', data);
+        const masterKey = localStorage.getItem(`masterKey-${id}`);
+        const privateKey  = localStorage.getItem(`privateKey-${id}`);
+
+        if (!masterKey || !privateKey) {
+          throw new Error('La clave maestra o la clave privada no están disponibles');
+        }
+
+        // Convertir la clave privada del usuario a un formato adecuado (ArrayBuffer)
+        const privateKeyArrayBuffer = new TextEncoder().encode(privateKey);
+
+        for (const user of data) {
+          console.log(`Enviando llave maestra a ${user.uuid_user}`);
+
+          // 1. Convertir la clave pública del destinatario desde el backend a ArrayBuffer
+          const publicKeyArrayBuffer = hexStringToArrayBuffer(user.llave_publica_usuario);
+
+          // 2. Generar la clave compartida usando Diffie-Hellman
+          const sharedKey = await generateSharedKey(privateKeyArrayBuffer, publicKeyArrayBuffer);
+
+          // 3. Cifrar la masterKey usando la clave compartida
+          const encryptedMasterKey = await encryptMasterKey(sharedKey, masterKey);
+
+          // 4. Enviar la clave maestra cifrada al backend
+          await sendMasterKey(user.uuid_user, encryptedMasterKey);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error al verificar usuarios pendientes:', error.message || error);
+    }
+  };
+
+  checkPendingUsers();
+}, [id]);
+
+// Convierte la cadena hexadecimal en ArrayBuffer
+function hexStringToArrayBuffer(hexString: string): ArrayBuffer {
+  const byteArray = [];
+  for (let i = 0; i < hexString.length; i += 2) {
+    byteArray.push(parseInt(hexString.substr(i, 2), 16));
+  }
+  return new Uint8Array(byteArray).buffer;
+}
+
+// Generar la clave compartida usando Diffie-Hellman
+async function generateSharedKey(privateKeyArrayBuffer: ArrayBuffer, publicKeyArrayBuffer: ArrayBuffer): Promise<CryptoKey> {
+  const privateKey = await window.crypto.subtle.importKey(
+    'raw',
+    privateKeyArrayBuffer,
+    {
+      name: 'ECDH',
+      namedCurve: 'P-256',
+    },
+    false,
+    ['deriveKey']
+  );
+
+  const publicKey = await window.crypto.subtle.importKey(
+    'raw',
+    publicKeyArrayBuffer,
+    {
+      name: 'ECDH',
+      namedCurve: 'P-256',
+    },
+    false,
+    []
+  );
+
+  const sharedKey = await window.crypto.subtle.deriveKey(
+    {
+      name: 'ECDH',
+      public: publicKey,
+    },
+    privateKey,
+    {
+      name: 'AES-GCM',
+      length: 256,
+    },
+    false,
+    ['encrypt']
+  );
+
+  return sharedKey;
+}
+
+// Cifrar la masterKey con la clave compartida usando AES-GCM
+async function encryptMasterKey(sharedKey: CryptoKey, masterKey: string): Promise<Uint8Array> {
+  const iv = window.crypto.getRandomValues(new Uint8Array(12)); // Initialization Vector (IV)
+  const encoder = new TextEncoder();
+  const data = encoder.encode(masterKey);
+
+  const encryptedData = await window.crypto.subtle.encrypt(
+    {
+      name: 'AES-GCM',
+      iv: iv,
+    },
+    sharedKey,
+    data
+  );
+  const combinedData = new Uint8Array(iv.byteLength + encryptedData.byteLength);
+  combinedData.set(iv, 0); // IV primero
+  combinedData.set(new Uint8Array(encryptedData), iv.byteLength); // Datos cifrados después
+
+  return combinedData ;
+}
+
+// Enviar la masterKey cifrada al backend
+async function sendMasterKey(uuid_user: string, encryptedMasterKey: Uint8Array): Promise<void> {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Token no encontrado.');
+  }
+
+  const response = await fetch(
+    `http://localhost:8000/api/enviar-masterkey/`, 
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        uuid_user: uuid_user,
+        master_key_encrypted: arrayBufferToBase64(encryptedMasterKey), // Enviar el array completo
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Error al enviar la clave maestra cifrada');
+  }
+
+  const data = await response.json();
+  console.log('Respuesta del servidor:', data);
+}
+
+// Convertir ArrayBuffer a Base64 para poder enviarlo en JSON
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
+}
   return (
     <div className="h-screen flex flex-col">
         <div className="flex items-center justify-between p-10 border-b px-48">
@@ -387,10 +572,8 @@ const handleGenerateKeys = async () => {
             </Button>
 
             <Button gradientDuoTone="purpleToPink" size="lg" onClick={handleHomeClick}>
-              Home
+                Home
             </Button>
-
-
 
           </div>
 

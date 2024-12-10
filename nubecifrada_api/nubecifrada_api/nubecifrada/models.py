@@ -26,7 +26,7 @@ class IntegrantesGrupo(models.Model):
     uuid_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="grupos_usuario")
     uuid_grupo = models.ForeignKey(GrupoCompartido, on_delete=models.CASCADE, related_name="integrantes")
     uuid_user_invitador = models.ForeignKey(User, on_delete=models.CASCADE, related_name="invitador",default=None)
-    llave_maestra_cifrada = models.BinaryField(default=b'')  # esto tambien habria que borrarlo 
+    llave_maestra_cifrada = models.BinaryField(default=b'')  
     llave_publica_usuario = models.CharField(max_length=255, null=True, blank=True, default=None)
 
     def __str__(self):

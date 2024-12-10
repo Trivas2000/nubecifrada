@@ -8,6 +8,41 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
   const [groupName, setGroupName] = useState("");
   const [response, setResponse] = useState<any | null>(null);
 
+  async function generateAndStoreKey() {
+    const key = await crypto.subtle.generateKey(
+      {
+        name: "AES-GCM",
+        length: 256,
+      },
+      true,
+      ["encrypt", "decrypt"]
+    );
+  
+    const exportedKey = await crypto.subtle.exportKey("jwk", key);
+    localStorage.setItem("encryptionKey", JSON.stringify(exportedKey));
+  }
+  
+  async function getKeyFromStorage() {
+    const keyData = localStorage.getItem("encryptionKey");
+    if (!keyData) {
+      await generateAndStoreKey();
+      return getKeyFromStorage();
+    }
+  
+    const importedKey = await crypto.subtle.importKey(
+      "jwk",
+      JSON.parse(keyData),
+      {
+        name: "AES-GCM",
+        length: 256,
+      },
+      true,
+      ["encrypt", "decrypt"]
+    );
+  
+    return importedKey;
+  }
+
   const createGroup = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -34,8 +69,11 @@ const CreateGroup: React.FC<CreateGroupProps> = ({ onGroupCreated }) => {
 
       const data = await res.json();
       setResponse(data);
-
-      const fileContent = `Generador del Grupo: ${data.generador_grupo}\nMódulo del Grupo: ${data.modulo_grupo}`;
+      const key = await getKeyFromStorage();
+      const exportedKey = await crypto.subtle.exportKey("jwk", key);
+      const readableKey = exportedKey.k || JSON.stringify(exportedKey); // Representación legible
+      localStorage.setItem(`masterKey-${response.groupId}`, readableKey);
+      const fileContent = `Generador del Grupo: ${data.generador_grupo}\nMódulo del Grupo: ${data.modulo_grupo}\nClaveMaestraDelGrupo: ${readableKey}`;
       // Descargar la clave privada del grupo para guardarla localmente
       const blob = new Blob([fileContent], { type: "text/plain" });
       const url = URL.createObjectURL(blob);

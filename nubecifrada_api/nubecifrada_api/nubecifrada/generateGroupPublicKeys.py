@@ -12,6 +12,3 @@ def generar_generador_y_modulo():
     g = parameters.parameter_numbers().g
     return p, g
 
-p,g = generar_generador_y_modulo()
-print(p.bit_length())
-print(g)

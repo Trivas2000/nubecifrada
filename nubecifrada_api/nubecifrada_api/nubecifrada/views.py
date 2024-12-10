@@ -12,6 +12,7 @@ from .models import *
 import uuid
 import os
 from .generateGroupPublicKeys import generar_generador_y_modulo
+import base64
 '''
 CustomTokenObtainPairView: Vista personalizada para la obtención de tokens JWT.
 Permite incluir información adicional del usuario (UUID y nombre de usuario) en la respuesta.
@@ -341,6 +342,73 @@ class RegisterPublicKeyView(APIView):
             return Response({"error": f"Error al registrar la clave pública: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+
+class IfsendMasterKey(APIView):
+    """
+    Clase para responder si el usuario autenticado debe enviar la clave maestra a algún usuario.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request,uuid_grupo): 
+        try:
+            usuario = request.user
+
+            # Filtrar usuarios invitados por el usuario actual dentro del grupo especificado
+            usuarios_pendientes = IntegrantesGrupo.objects.filter(
+                uuid_user_invitador=usuario,  # Invitados por el usuario actual
+                uuid_grupo__uuid_grupo=uuid_grupo,  # Dentro del grupo especificado
+            ).exclude(
+                uuid_user=usuario  # Excluir al creador del grupo (el usuario actual)
+            ).filter(
+                llave_publica_usuario__isnull=False,  # Solo los que tienen clave pública agregada
+                llave_maestra_cifrada=b''
+            ).values("uuid_user", "uuid_grupo","llave_publica_usuario")
+            respuesta = list(usuarios_pendientes)
+            if not respuesta:
+                return Response([], status=status.HTTP_200_OK
+                )
+            return Response(respuesta, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            # Manejo genérico de errores
+            return Response(
+                {"error": "Error al procesar la solicitud.", "detalle": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class sendMasterKey(APIView):
+    """
+    Luego de que sabemos que los usuarios publican su llave publica, que les falta la llave maestra y que nosotros debemos enviarselas,
+    la enviamos. 
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # Obtener los datos enviados
+            uuid_user = request.data.get('uuid_user')
+            master_key_encrypted_base64 = request.data.get('master_key_encrypted')
+
+            if not uuid_user or not master_key_encrypted_base64:
+                return Response({'error': 'Faltan datos requeridos'}, status=400)
+
+            # Convertir de Base64 a bytes
+            master_key_encrypted = base64.b64decode(master_key_encrypted_base64)
+
+            # Aquí puedes hacer el almacenamiento de la clave cifrada en la base de datos o hacer lo que sea necesario
+            user = User.objects.get(uuid_user=uuid_user)
+            
+            # Crear o actualizar el registro en la base de datos de IntegrantesGrupo (u otro modelo según sea necesario)
+            integrante = IntegrantesGrupo.objects.get(uuid_user=user)
+            integrante.llave_maestra_cifrada = master_key_encrypted
+            integrante.save()
+
+            return Response({'success': 'Clave maestra cifrada almacenada exitosamente.'}, status=200)
+
+        except Exception as e:
+            return Response({'error': f'Error al procesar la solicitud: {str(e)}'}, status=500)
+
 class GrupoDetalleView(APIView):
     def get(self, request, uuid_grupo):
         try:
@@ -383,3 +451,4 @@ class UsuarioGrupoDetalleView(APIView):
                 {"error": f"Error al obtener las llaves: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
