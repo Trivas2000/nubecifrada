@@ -434,25 +434,21 @@ useEffect(() => {
             throw new Error('La clave maestra o la clave privada no están disponibles');
           }
           // Convertir la clave privada del usuario a un formato adecuado (ArrayBuffer)
-          const privateKeyArrayBuffer = new TextEncoder().encode(privateKey);
+          const storedKey = localStorage.getItem(`privateKey-${id}`);
+          const privateKeyArrayBuffer = JSON.parse(atob(storedKey));
+          
   
           for (const user of data) {
             console.log(`Enviando llave maestra a ${user.uuid_user}`);
-  
+            const publicKeyJson = JSON.parse(atob(user.llave_publica_usuario));
             // 1. Convertir la clave pública del destinatario desde el backend a ArrayBuffer
             //const publicKeyArrayBuffer = hexStringToArrayBuffer(user.llave_publica_usuario);
             /*
             // 2. Generar la clave compartida usando Diffie-Hellman
-            console.log("generando clave compartida")
-            const binaryString_private = atob(privateKey);
-            const privateKeyArrayBuffer = Uint8Array.from(binaryString_private, char => char.charCodeAt(0)).buffer;
-            const binaryString_master = atob(user.llave_publica_usuario);
-            const publicKeyArrayBuffer = Uint8Array.from(binaryString_master, char => char.charCodeAt(0)).buffer;
-            const sharedKey = await generateSharedKey(privateKeyArrayBuffer, publicKeyArrayBuffer);
+
             */
-            const privateKeyArrayBuffer = base64ToArrayBuffer(privateKey);
-            const publicKeyArrayBuffer = base64ToArrayBuffer(user.llave_publica_usuario);
-            const sharedKey = await generateSharedKey(privateKeyArrayBuffer, publicKeyArrayBuffer);
+
+            const sharedKey = await generateSharedKey(privateKeyArrayBuffer, publicKeyJson);
 
             // 3. Cifrar la masterKey usando la clave compartida
             const encryptedMasterKey = await encryptMasterKey(sharedKey, masterKey);
@@ -480,41 +476,42 @@ function hexStringToArrayBuffer(hexString: string): ArrayBuffer {
 }
 
 // Generar la clave compartida usando Diffie-Hellman
-async function generateSharedKey(privateKeyArrayBuffer: ArrayBuffer, publicKeyArrayBuffer: ArrayBuffer): Promise<CryptoKey> {
-  const privateKey = await window.crypto.subtle.importKey(
-    'raw',
-    privateKeyArrayBuffer,
+async function generateSharedKey(privateKeyArrayBuffer: JsonWebKey, publicKey: JsonWebKey): Promise<CryptoKey> {
+
+  const privateKey = await crypto.subtle.importKey(
+    "jwk", // Formato de entrada
+    privateKeyArrayBuffer, // Objeto JWK
     {
-      name: 'ECDH',
-      namedCurve: 'P-256',
+      name: "ECDH",
+      namedCurve: "P-256",
     },
     true,
-    ['deriveKey']
+    ["deriveKey", "deriveBits"]
   );
 
-  const publicKey = await window.crypto.subtle.importKey(
-    'raw',
-    publicKeyArrayBuffer,
+  const cryptoKey = await crypto.subtle.importKey(
+    "jwk", // Formato de clave
+    publicKey, // Objeto JWK
     {
-      name: 'ECDH',
-      namedCurve: 'P-256',
+      name: "ECDH", // Algoritmo asociado
+      namedCurve: "P-256", // Curva utilizada
     },
-    true,
-    ['deriveKey']
+    true, // Exportable
+    [] // Propósitos permitidos (no se requieren para claves públicas)
   );
 
-  const sharedKey = await window.crypto.subtle.deriveKey(
+  const sharedKey = await crypto.subtle.deriveKey(
     {
-      name: 'ECDH',
-      public: publicKey,
+      name: "ECDH",
+      public: cryptoKey,
     },
     privateKey,
     {
-      name: 'AES-GCM',
+      name: "AES-GCM",
       length: 256,
     },
-    false,
-    ['encrypt']
+    true,
+    ["encrypt", "decrypt"]
   );
 
   return sharedKey;
