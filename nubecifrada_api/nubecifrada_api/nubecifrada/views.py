@@ -292,7 +292,7 @@ class DescargarArchivoView(APIView):
             raise Http404("Archivo no encontrado en el sistema de archivos")
         except Exception as e:
             return HttpResponse(status=500, content=str(e))
-     
+
 
 class ObtenerParametrosGrupo(APIView):
     """
@@ -340,6 +340,7 @@ class RegisterPublicKeyView(APIView):
 
         except Exception as e:
             return Response({"error": f"Error al registrar la clave pública: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 class IfsendMasterKey(APIView):
@@ -407,3 +408,47 @@ class sendMasterKey(APIView):
 
         except Exception as e:
             return Response({'error': f'Error al procesar la solicitud: {str(e)}'}, status=500)
+
+class GrupoDetalleView(APIView):
+    def get(self, request, uuid_grupo):
+        try:
+            grupo = GrupoCompartido.objects.get(uuid_grupo=uuid_grupo)
+            serializer = GrupoCompartidoSerializer(grupo)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except GrupoCompartido.DoesNotExist:
+            return Response({"error": "Grupo no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+class UsuarioGrupoDetalleView(APIView):
+    """
+    Vista para obtener la información de la llave maestra cifrada y la llave pública del usuario autenticado.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, uuid_grupo):
+        try:
+            # Filtrar por el grupo y el usuario autenticado
+            integrante = IntegrantesGrupo.objects.filter(
+                uuid_user=request.user,
+                uuid_grupo__uuid_grupo=uuid_grupo
+            ).first()
+
+            if not integrante:
+                return Response(
+                    {"error": "El usuario no pertenece a este grupo o el grupo no existe."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Serializar la información del integrante
+            serializer = IntegrantesGrupoSerializer(integrante)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": f"Error al obtener las llaves: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+

@@ -33,7 +33,7 @@ class GrupoCompartidoAdmin(admin.ModelAdmin):
 # Registrar el modelo ArchivosCompartidos
 @admin.register(IntegrantesGrupo)
 class IntegrantesGrupoAdmin(admin.ModelAdmin):
-    list_display = ('uuid_integrantes', 'uuid_user', 'uuid_grupo')
+    list_display = ('uuid_integrantes', 'uuid_user', 'uuid_grupo', 'llave_publica_usuario', 'llave_maestra_cifrada')
     search_fields = ('uuid_user__username', 'uuid_grupo__nombre_grupo')
     list_filter = ('uuid_grupo',)
 

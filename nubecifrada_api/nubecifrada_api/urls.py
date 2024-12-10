@@ -25,4 +25,6 @@ urlpatterns = [
     path('api/grupos/<uuid:uuid_grupo>/registrar-clave-publica/', RegisterPublicKeyView.as_view(), name='registrar-clave-publica'),
     path('api/<uuid:uuid_grupo>/integrantes-pendientes/' , IfsendMasterKey.as_view(),name='integrantes-pendientes'),
     path('/api/enviar-masterkey/',sendMasterKey.as_view(),name='enviar-masterkey')
-]
+    path('api/grupo/<uuid:uuid_grupo>/generador-grupo/', GrupoDetalleView.as_view(), name='generador-grupo'),
+    path('api/grupo/<uuid:uuid_grupo>/usuario-grupo-detalles/', UsuarioGrupoDetalleView.as_view(), name='usuario-grupo-detalles'),]
+

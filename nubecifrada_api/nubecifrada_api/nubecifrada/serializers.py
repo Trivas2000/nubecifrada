@@ -32,15 +32,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class GrupoCompartidoSerializer(serializers.ModelSerializer):
     class Meta:
         model = GrupoCompartido
-        fields = ['uuid_grupo', 'nombre_grupo', 'uuid_user_admin']
-
+        fields = ['uuid_grupo', 'nombre_grupo', 'generador_grupo', 'modulo_grupo']
 class IntegrantesGrupoSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='uuid_user.username', read_only=True)
 
     class Meta:
         model = IntegrantesGrupo
-        fields = ['uuid_integrantes', 'uuid_user', 'uuid_grupo','username']
-
+        fields = '__all__'
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,3 +51,4 @@ class ArchivosCompartidosSerializer(serializers.ModelSerializer):
     class Meta:
         model = ArchivosCompartidos
         fields = ['uuid_archivo', 'nombre_archivo', 'ruta_archivo', 'uuid_user_subidor', 'nombre_usuario']
+
